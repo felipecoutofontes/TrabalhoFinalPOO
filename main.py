@@ -7,10 +7,6 @@ from enemy import Enemy
 #inicia o pg
 pg.init()
 
-#interface
-screen = pg.display.set_mode((c.SCREEN_WIDTH, c.SCREEN_HEIGHT))
-pg.display.set_caption("Tela Inicial do Jogo")
-
 # Cores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -65,13 +61,20 @@ def load_and_scale_image(path, size=(83, 100)):
     return pg.transform.scale(image, size)
 
 # Carregar a imagem redimensionada
-enemy_image = load_and_scale_image('coisas\\images\\enemies\\macacoteste.png').convert_alpha()
+enemy_image = load_and_scale_image('coisas\\images\\enemies\\macacoteste.png')
 
 
 #criar grupos
 enemy_group = pg.sprite.Group()
 
-enemy = Enemy((200, 300), enemy_image)
+waypoints = [
+    (100, 100),
+    (400, 200),
+    (400, 100),
+    (200, 300)
+]
+
+enemy = Enemy(waypoints, enemy_image)
 enemy_group.add(enemy)
 
 #loop do jogo
@@ -83,10 +86,13 @@ def game_loop():
     
         screen.fill("grey100")
         
+        #desenha caminho
+        pg.draw.lines(screen, "grey0", False, waypoints)
+        
         #atualizar grupos
         enemy_group.update()
 
-        #draw grupos
+        #desenha grupos
         enemy_group.draw(screen)
         
         #gerenciador de eventos
@@ -101,4 +107,3 @@ def game_loop():
 main_menu()
                 
 pg.quit()
-
