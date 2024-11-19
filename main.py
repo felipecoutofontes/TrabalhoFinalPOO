@@ -2,6 +2,7 @@ import pygame as pg
 import constants as c
 import sys
 from enemy import Enemy
+from world import World
 
 
 #inicia o pg
@@ -56,12 +57,20 @@ screen = pg.display.set_mode((c.SCREEN_WIDTH, c.SCREEN_HEIGHT))
 pg.display.set_caption("Tower Defense - Oz")
 
 #redimensionar imagens
-def load_and_scale_image(path, size=(83, 100)):
+def load_and_scale_image1(path, size=(83, 100)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
+def load_and_scale_image2(path, size=(800, 600)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
 # Carregar a imagem redimensionada
-enemy_image = load_and_scale_image('coisas\\images\\enemies\\macacoteste.png')
+map_image = load_and_scale_image2('coisas\\images\\fases\\level.png')
+enemy_image = load_and_scale_image1('coisas\\images\\enemies\\macacoteste.png')
+
+#cria o mundo
+world = World(map_image)
 
 
 #criar grupos
@@ -85,6 +94,9 @@ def game_loop():
         clock.tick(c.FPS)
     
         screen.fill("grey100")
+        
+        #desenha fase
+        world.draw(screen)
         
         #desenha caminho
         pg.draw.lines(screen, "grey0", False, waypoints)
