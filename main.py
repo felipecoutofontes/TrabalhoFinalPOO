@@ -1,64 +1,27 @@
 import pygame as pg
 import json
 import constants as c
-import sys
 from enemy import Enemy
 from world import World
+from turret import Turret
+from interface import main_menu
 
-
-#inicia o pg
+# Inicia o pygame
 pg.init()
 
-# Cores
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-
-# Fonte
-font = pg.font.Font(None, 74)
-button_font = pg.font.Font(None, 50)
-
-# Funções
-def draw_text(text, font, color, surface, x, y):
-    text_obj = font.render(text, True, color)
-    text_rect = text_obj.get_rect(center=(x, y))
-    surface.blit(text_obj, text_rect)
-
-def main_menu():
-    while True:
-        screen.fill(WHITE)
-
-        # Desenha o título
-        draw_text("Tower Defense - Oz", font, BLACK, screen, c.SCREEN_WIDTH // 2, c.SCREEN_HEIGHT // 4)
-
-        # Configuração do botão
-        button_text = "Jogar"
-        button_rect = pg.Rect(c.SCREEN_WIDTH // 2 - 100, c.SCREEN_HEIGHT // 2, 200, 50)
-        pg.draw.rect(screen, BLUE, button_rect)
-
-        # Exibe o texto do botão
-        draw_text(button_text, button_font, WHITE, screen, c.SCREEN_WIDTH // 2, c.SCREEN_HEIGHT // 2 + 25)
-
-        # Verifica eventos
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
-                    game_loop()  # Chama a função do jogo ao clicar no botão
-
-        pg.display.flip()
-
-#cria clock
+# Cria o clock
 clock = pg.time.Clock()
 
-#cria janela do jogo
+# Configura a janela do jogo
 screen = pg.display.set_mode((c.SCREEN_WIDTH, c.SCREEN_HEIGHT))
 pg.display.set_caption("Tower Defense - Oz")
 
-#redimensionar imagens
-def load_and_scale_image1(path, size=(83, 100)):
+# Funções auxiliares para carregar imagens
+def load_and_scale_image(path, size=(81, 100)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
+def load_and_scale_image1(path, size=(54, 67)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
@@ -66,54 +29,69 @@ def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
-# Carregar a imagem redimensionada
-map_image = load_and_scale_image2('coisas/images//fases/level.png')
-enemy_image = load_and_scale_image1('coisas/images/enemies/macacoteste.png')
+# Carregar imagens
+map_image = load_and_scale_image2('coisas/images/fases/level.png')
+cursor_turret = load_and_scale_image1('coisas/images/turrets/macacoteste1.png')
+enemy_image = load_and_scale_image('coisas/images/enemies/macacoteste.png')
 
-#carrega json do mapa
-with open('levels\level.tmj') as file:
-    world_data =json.load(file)
+# Carregar o JSON do mapa
+with open('levels/level.tmj') as file:
+    world_data = json.load(file)
 
-#cria o mundo
+# Criar o mundo
 world = World(world_data, map_image)
 world.process_data()
 
-
-#criar grupos
+# Criar grupos
 enemy_group = pg.sprite.Group()
+turret_group = pg.sprite.Group()
 
 if world.waypoints:
     enemy = Enemy(world.waypoints, enemy_image)
-
 enemy_group.add(enemy)
 
-#loop do jogo
+# Função para criar uma torre
+def create_turret(mouse_pos):
+    mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
+    mouse_tile_y = mouse_pos[1] // c.TILE_SIZE
+    mouse_tile_num = (mouse_tile_y * c.COLS) + mouse_tile_x
+
+    if world.tile_map[mouse_tile_num] == 7:  # Verifica se o tile é válido
+        space_is_free = True
+        for turret in turret_group:
+            if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
+                space_is_free = False
+        if space_is_free:
+            new_turret = Turret(cursor_turret, mouse_tile_x, mouse_tile_y)
+            turret_group.add(new_turret)
+
+# Loop do jogo
 def game_loop():
     run = True
     while run:
-    
         clock.tick(c.FPS)
-    
         screen.fill("grey100")
-        
-        #desenha fase
-        world.draw(screen)
-        
-        #atualizar grupos
-        enemy_group.update()
 
-        #desenha grupos
+        # Desenha o mundo
+        world.draw(screen)
+
+        # Atualiza e desenha grupos
+        enemy_group.update()
         enemy_group.draw(screen)
-        
-        #gerenciador de eventos
+        turret_group.draw(screen)
+
+        # Gerenciador de eventos
         for event in pg.event.get():
-            #fecha programa
             if event.type == pg.QUIT:
                 run = False
-                
-        #atualiza display
-        pg.display.flip()    
-        
-main_menu()
-                           
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pg.mouse.get_pos()
+                if mouse_pos[0] < c.SCREEN_WIDTH and mouse_pos[1] < c.SCREEN_HEIGHT:
+                    create_turret(mouse_pos)
+
+        pg.display.flip()
+
+# Executar o menu principal
+main_menu(screen, game_loop)
+
 pg.quit()
