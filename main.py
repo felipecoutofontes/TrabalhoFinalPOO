@@ -1,4 +1,5 @@
 import pygame as pg
+import json
 import constants as c
 import sys
 from enemy import Enemy
@@ -61,29 +62,29 @@ def load_and_scale_image1(path, size=(83, 100)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
-def load_and_scale_image2(path, size=(800, 600)):
+def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
 # Carregar a imagem redimensionada
-map_image = load_and_scale_image2('coisas\\images\\fases\\level.png')
-enemy_image = load_and_scale_image1('coisas\\images\\enemies\\macacoteste.png')
+map_image = load_and_scale_image2('coisas/images//fases/level.png')
+enemy_image = load_and_scale_image1('coisas/images/enemies/macacoteste.png')
+
+#carrega json do mapa
+with open('levels\level.tmj') as file:
+    world_data =json.load(file)
 
 #cria o mundo
-world = World(map_image)
+world = World(world_data, map_image)
+world.process_data()
 
 
 #criar grupos
 enemy_group = pg.sprite.Group()
 
-waypoints = [
-    (100, 100),
-    (400, 200),
-    (400, 100),
-    (200, 300)
-]
+if world.waypoints:
+    enemy = Enemy(world.waypoints, enemy_image)
 
-enemy = Enemy(waypoints, enemy_image)
 enemy_group.add(enemy)
 
 #loop do jogo
@@ -97,9 +98,6 @@ def game_loop():
         
         #desenha fase
         world.draw(screen)
-        
-        #desenha caminho
-        pg.draw.lines(screen, "grey0", False, waypoints)
         
         #atualizar grupos
         enemy_group.update()
@@ -117,5 +115,5 @@ def game_loop():
         pg.display.flip()    
         
 main_menu()
-                
+                           
 pg.quit()
