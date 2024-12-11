@@ -21,7 +21,7 @@ def main_menu(screen, game_loop):
         screen.fill(WHITE)
 
         # Desenha o título
-        draw_text("Tower Defense - Oz", font, BLACK, screen, c.SCREEN_WIDTH // 2, c.SCREEN_HEIGHT // 4)
+        draw_text("Tower Defense", font, BLACK, screen, c.SCREEN_WIDTH // 2, c.SCREEN_HEIGHT // 4)
 
         # Configuração do botão
         button_text = "Jogar"

@@ -1,3 +1,3 @@
 # TrabalhoFinalPOO
-Jogo de Tower Defense baseado no universo de O Mágico de Oz
+Jogo de Tower Defense
 Grupo: Felipe Couto Dionísio Bueno Fontes, Julia Fernandes Reis Bittencourt, Laila Tavares de Carvalho

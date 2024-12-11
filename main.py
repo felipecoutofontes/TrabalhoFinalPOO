@@ -15,7 +15,10 @@ clock = pg.time.Clock()
 
 # Configura a janela do jogo
 screen = pg.display.set_mode((c.SCREEN_WIDTH + c.SIDE_PANEL, c.SCREEN_HEIGHT))
-pg.display.set_caption("Tower Defense - Oz")
+pg.display.set_caption("Tower Defense")
+
+#variaveis de jogo
+placing_turrets = False
 
 # Funções auxiliares para carregar imagens
 def load_and_scale_image(path, size=(81, 100)):
@@ -53,8 +56,8 @@ enemy_group = pg.sprite.Group()
 turret_group = pg.sprite.Group()
 
 #cria botao
-turret_button = Button(c.SCREEN_WIDTH + 30, 120, buy_turret_image)
-cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image)
+turret_button = Button(c.SCREEN_WIDTH + 30, 120, buy_turret_image, True)
+cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image, True)
 
 
 if world.waypoints:
@@ -78,6 +81,7 @@ def create_turret(mouse_pos):
 
 # Loop do jogo
 def game_loop():
+    global placing_turrets
     run = True
     while run:
         clock.tick(c.FPS)
@@ -94,11 +98,17 @@ def game_loop():
         
         
         if turret_button.draw(screen):
-            print("new turret")
-            
-            
-        if cancel_button.draw(screen):
-            print("cancel")
+            placing_turrets = True
+        
+        if placing_turrets == True: 
+            cursor_rect = cursor_turret.get_rect()
+            cursor_pos = pg.mouse.get_pos()
+            cursor_rect.center = cursor_pos
+            if cursor_pos[0] <= c.SCREEN_WIDTH:
+                screen.blit(cursor_turret, cursor_rect)
+            if placing_turrets == True:    
+                if cancel_button.draw(screen):
+                    placing_turrets = False
         
         
         
@@ -110,7 +120,8 @@ def game_loop():
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = pg.mouse.get_pos()
                 if mouse_pos[0] < c.SCREEN_WIDTH and mouse_pos[1] < c.SCREEN_HEIGHT:
-                    create_turret(mouse_pos)
+                    if placing_turrets == True:
+                        create_turret(mouse_pos)
 
         pg.display.flip()
 
