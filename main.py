@@ -35,8 +35,11 @@ def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
 
 # Carregar imagens
 map_image = load_and_scale_image2('coisas/images/fases/level.png')
-cursor_turret = load_and_scale_image1('coisas/images/turrets/macacoteste1.png')
+turret_sheet = pg.image.load('coisas/images/turrets/turret_1.png').convert_alpha()
+#cursor_turret = load_and_scale_image1('coisas/images/turrets/cursor_turret.png')
+cursor_turret = pg.image.load('coisas/images/turrets/cursor_turret.png').convert_alpha()
 enemy_image = load_and_scale_image('coisas/images/enemies/macacoteste.png')
+
 #botoes
 buy_turret_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
 cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
@@ -46,6 +49,22 @@ cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
 # Carregar o JSON do mapa
 with open('levels/level.tmj') as file:
     world_data = json.load(file)
+
+# Função para criar uma torre
+def create_turret(mouse_pos):
+    mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
+    mouse_tile_y = mouse_pos[1] // c.TILE_SIZE
+    mouse_tile_num = (mouse_tile_y * c.COLS) + mouse_tile_x
+
+    if world.tile_map[mouse_tile_num] == 7:  # Verifica se o tile é válido
+        space_is_free = True
+        for turret in turret_group:
+            if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
+                space_is_free = False
+        if space_is_free:
+            new_turret = Turret(turret_sheet, mouse_tile_x, mouse_tile_y)
+            turret_group.add(new_turret)
+
 
 # Criar o mundo
 world = World(world_data, map_image)
@@ -64,20 +83,6 @@ if world.waypoints:
     enemy = Enemy(world.waypoints, enemy_image)
 enemy_group.add(enemy)
 
-# Função para criar uma torre
-def create_turret(mouse_pos):
-    mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
-    mouse_tile_y = mouse_pos[1] // c.TILE_SIZE
-    mouse_tile_num = (mouse_tile_y * c.COLS) + mouse_tile_x
-
-    if world.tile_map[mouse_tile_num] == 7:  # Verifica se o tile é válido
-        space_is_free = True
-        for turret in turret_group:
-            if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
-                space_is_free = False
-        if space_is_free:
-            new_turret = Turret(cursor_turret, mouse_tile_x, mouse_tile_y)
-            turret_group.add(new_turret)
 
 # Loop do jogo
 def game_loop():
@@ -88,6 +93,7 @@ def game_loop():
         screen.fill("grey100")
         # Atualiza
         enemy_group.update()
+        turret_group.update()
 
 
 
