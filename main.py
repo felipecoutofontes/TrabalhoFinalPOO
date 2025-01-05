@@ -19,6 +19,9 @@ pg.display.set_caption("Tower Defense")
 
 #variaveis de jogo
 placing_turrets = False
+select_turret = None
+selected_turret = None
+
 
 # Funções auxiliares para carregar imagens
 def load_and_scale_image(path, size=(81, 100)):
@@ -35,16 +38,19 @@ def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
 
 # Carregar imagens
 map_image = load_and_scale_image2('coisas/images/fases/level.png')
-turret_sheet = pg.image.load('coisas/images/turrets/turret_1.png').convert_alpha()
+turret_spritesheets = []
+for x in range(1, c.TURRET_LEVELS + 1):
+    turret_sheet = pg.image.load(f'coisas/images/turrets/turret_{x}.png').convert_alpha()
+    turret_spritesheets.append(turret_sheet)
 #cursor_turret = load_and_scale_image1('coisas/images/turrets/cursor_turret.png')
 cursor_turret = pg.image.load('coisas/images/turrets/cursor_turret.png').convert_alpha()
-enemy_image = load_and_scale_image('coisas/images/enemies/macacoteste.png')
+#imagens enemies
+enemy_image = load_and_scale_image('coisas/images/enemies/enemy_1.png')
 
 #botoes
 buy_turret_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
 cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
-
-
+upgrade_turret_image = pg.image.load('coisas/images/botoes/upgrade_turret.png').convert_alpha()
 
 # Carregar o JSON do mapa
 with open('levels/level.tmj') as file:
@@ -62,9 +68,20 @@ def create_turret(mouse_pos):
             if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
                 space_is_free = False
         if space_is_free:
-            new_turret = Turret(turret_sheet, mouse_tile_x, mouse_tile_y)
+            new_turret = Turret(turret_spritesheets, mouse_tile_x, mouse_tile_y)
             turret_group.add(new_turret)
 
+
+def select_turret(mouse_pos):
+    mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
+    mouse_tile_y = mouse_pos[1] // c.TILE_SIZE
+    for turret in turret_group:
+        if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
+            return turret
+
+def clear_selection():
+    for turret in turret_group:
+        turret.selected = False
 
 # Criar o mundo
 world = World(world_data, map_image)
@@ -77,7 +94,7 @@ turret_group = pg.sprite.Group()
 #cria botao
 turret_button = Button(c.SCREEN_WIDTH + 30, 120, buy_turret_image, True)
 cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image, True)
-
+upgrade_button = Button(c.SCREEN_WIDTH + 5, 180, upgrade_turret_image, True)
 
 if world.waypoints:
     enemy = Enemy(world.waypoints, enemy_image)
@@ -86,39 +103,42 @@ enemy_group.add(enemy)
 
 # Loop do jogo
 def game_loop():
-    global placing_turrets
+    global placing_turrets, selected_turret  # Declarar variáveis globais
     run = True
     while run:
         clock.tick(c.FPS)
         screen.fill("grey100")
         # Atualiza
         enemy_group.update()
-        turret_group.update()
+        turret_group.update(enemy_group)
 
-
+        # Highlight da torre selecionada
+        if selected_turret:
+            selected_turret.selected = True
 
         # Desenha
         world.draw(screen)
         enemy_group.draw(screen)
-        turret_group.draw(screen)
-        
+        for turret in turret_group:
+            turret.draw(screen)
         
         if turret_button.draw(screen):
             placing_turrets = True
         
-        if placing_turrets == True: 
+        if placing_turrets:
             cursor_rect = cursor_turret.get_rect()
             cursor_pos = pg.mouse.get_pos()
             cursor_rect.center = cursor_pos
             if cursor_pos[0] <= c.SCREEN_WIDTH:
                 screen.blit(cursor_turret, cursor_rect)
-            if placing_turrets == True:    
-                if cancel_button.draw(screen):
-                    placing_turrets = False
+            if cancel_button.draw(screen):
+                placing_turrets = False
+        #botão de upgrade aparece se um turret for selecionado
+        if selected_turret:
+           if selected_turret.upgrade_level < c.TURRET_LEVELS:
+            if upgrade_button.draw(screen):
+               selected_turret.upgrade()
         
-        
-        
-
         # Gerenciador de eventos
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -126,12 +146,19 @@ def game_loop():
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = pg.mouse.get_pos()
                 if mouse_pos[0] < c.SCREEN_WIDTH and mouse_pos[1] < c.SCREEN_HEIGHT:
+                    #limpar seleção de turret
+                    selected_turret = None
+                    clear_selection()
                     if placing_turrets == True:
                         create_turret(mouse_pos)
-
+                    else:
+                        selected_turret = select_turret(mouse_pos)
+        
         pg.display.flip()
+
 
 # Executar o menu principal
 main_menu(screen, game_loop)
 
 pg.quit()
+
