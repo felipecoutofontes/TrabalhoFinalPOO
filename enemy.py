@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame.math import Vector2
 import math
+import constants as c
 from enemy_data import ENEMY_DATA
 
 
@@ -18,11 +19,12 @@ class Enemy(pg.sprite.Sprite):
     self.rect = self.image.get_rect()
     self.rect.center = self.pos
 
-  def update(self):
-    self.move()
+  def update(self, world):
+    self.move(world)
     self.rotate()
+    self.check_alive(world)
 
-  def move(self):
+  def move(self, world):
     #define waypoint alvo
     if self.target_waypoint < len(self.waypoints):
       self.target = Vector2(self.waypoints[self.target_waypoint])
@@ -30,6 +32,8 @@ class Enemy(pg.sprite.Sprite):
     else:
       #enemy chegou no fim do caminho
       self.kill()
+      world.health -=1
+      world.missed_enemies += 1
 
     #calcula distancia ate o alvo
     dist = self.movement.length()
@@ -52,3 +56,9 @@ class Enemy(pg.sprite.Sprite):
     self.image = pg.transform.rotate(self.original_image, self.angle)
     self.rect = self.image.get_rect()
     self.rect.center = self.pos
+  
+  def check_alive(self, world):
+    if self.health <= 0:
+      world.killed_enemies += 1
+      world.money += c.KILL_REWARD
+      self.kill()
