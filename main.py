@@ -18,6 +18,7 @@ screen = pg.display.set_mode((c.SCREEN_WIDTH + c.SIDE_PANEL, c.SCREEN_HEIGHT))
 pg.display.set_caption("Tower Defense")
 
 #variaveis de jogo
+last_enemy_spawn = pg.time.get_ticks()
 placing_turrets = False
 select_turret = None
 selected_turret = None
@@ -42,10 +43,15 @@ turret_spritesheets = []
 for x in range(1, c.TURRET_LEVELS + 1):
     turret_sheet = pg.image.load(f'coisas/images/turrets/turret_{x}.png').convert_alpha()
     turret_spritesheets.append(turret_sheet)
-#cursor_turret = load_and_scale_image1('coisas/images/turrets/cursor_turret.png')
 cursor_turret = pg.image.load('coisas/images/turrets/cursor_turret.png').convert_alpha()
+
 #imagens enemies
-enemy_image = load_and_scale_image('coisas/images/enemies/enemy_1.png')
+enemy_images = {
+    "weak" : load_and_scale_image('coisas/images/enemies/enemy_1.png'),
+    "medium" : load_and_scale_image('coisas/images/enemies/enemy_2.png'),
+    "strong" : load_and_scale_image('coisas/images/enemies/enemy_3.png'),
+    "boss" : load_and_scale_image('coisas/images/enemies/enemy_4.png')
+}
 
 #botoes
 buy_turret_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
@@ -86,6 +92,7 @@ def clear_selection():
 # Criar o mundo
 world = World(world_data, map_image)
 world.process_data()
+world.process_enemies()
 
 # Criar grupos
 enemy_group = pg.sprite.Group()
@@ -96,14 +103,9 @@ turret_button = Button(c.SCREEN_WIDTH + 30, 120, buy_turret_image, True)
 cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image, True)
 upgrade_button = Button(c.SCREEN_WIDTH + 5, 180, upgrade_turret_image, True)
 
-if world.waypoints:
-    enemy = Enemy(world.waypoints, enemy_image)
-enemy_group.add(enemy)
-
-
 # Loop do jogo
 def game_loop():
-    global placing_turrets, selected_turret  # Declarar variáveis globais
+    global placing_turrets, selected_turret, last_enemy_spawn #declarara variaveis globais
     run = True
     while run:
         clock.tick(c.FPS)
@@ -122,6 +124,15 @@ def game_loop():
         for turret in turret_group:
             turret.draw(screen)
         
+        #spawn enemies
+        if pg.time.get_ticks() - last_enemy_spawn > c.SPAWN_COOLDOWN:
+            if world.spawned_enemies < len(world.enemy_list):
+                enemy_type = world.enemy_list[world.spawned_enemies]
+                enemy = Enemy(enemy_type, world.waypoints, enemy_images)
+                enemy_group.add(enemy)
+                world.spawned_enemies += 1
+                last_enemy_spawn = pg.time.get_ticks()
+
         if turret_button.draw(screen):
             placing_turrets = True
         
@@ -133,6 +144,7 @@ def game_loop():
                 screen.blit(cursor_turret, cursor_rect)
             if cancel_button.draw(screen):
                 placing_turrets = False
+        
         #botão de upgrade aparece se um turret for selecionado
         if selected_turret:
            if selected_turret.upgrade_level < c.TURRET_LEVELS:
