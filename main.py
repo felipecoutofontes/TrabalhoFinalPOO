@@ -62,6 +62,15 @@ cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
 upgrade_turret_image = pg.image.load('coisas/images/botoes/upgrade_turret.png').convert_alpha()
 begin_image = pg.image.load('coisas/images/botoes/begin.png').convert_alpha()
 restart_image = pg.image.load('coisas/images/botoes/restart.png').convert_alpha()
+fast_foward_image = pg.image.load('coisas/images/botoes/fast_foward.png').convert_alpha()
+#gui
+heart_image = pg.image.load('coisas/images/interface/heart.png').convert_alpha()
+coin_image = pg.image.load('coisas/images/interface/coin.png').convert_alpha()
+logo_image = pg.image.load('coisas/images/interface/logo.png').convert_alpha()
+
+#sons
+shot_fx = pg.mixer.Sound('coisas/sons/shot.wav')
+shot_fx.set_volume(0.5)
 
 # Carregar o JSON do mapa
 with open('levels/level.tmj') as file:
@@ -76,6 +85,18 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
+def display_data():
+    #desenha painel
+    pg.draw.rect(screen, "darkblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT ))
+    pg.draw.rect(screen, "white", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, 400 ), 4)
+    screen.blit(logo_image, (c.SCREEN_WIDTH, 400))
+    #display informações
+    draw_text("LEVEL: " + str(world.level), text_font, "grey100", c.SCREEN_WIDTH + 15, 15) 
+    screen.blit(heart_image, (c.SCREEN_WIDTH +15, 40))
+    draw_text(str(world.health), text_font, "grey100", c.SCREEN_WIDTH + 55, 45) 
+    screen.blit(coin_image, (c.SCREEN_WIDTH + 15, 70))
+    draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 55, 75 ) 
+
 # Função para criar uma torre
 def create_turret(mouse_pos):
     mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
@@ -88,7 +109,7 @@ def create_turret(mouse_pos):
             if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
                 space_is_free = False
         if space_is_free:
-            new_turret = Turret(turret_spritesheets, mouse_tile_x, mouse_tile_y)
+            new_turret = Turret(turret_spritesheets, mouse_tile_x, mouse_tile_y, shot_fx)
             turret_group.add(new_turret)
             #SUBTRAIR CUSTO DE TURRET
             world.money -= c.BUY_COST
@@ -120,14 +141,14 @@ cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image, True)
 upgrade_button = Button(c.SCREEN_WIDTH + 5, 180, upgrade_turret_image, True)
 begin_button = Button(c.SCREEN_WIDTH + 5, 300, begin_image, True)
 restart_button = Button(310, 300, restart_image, True)
+fast_foward_button = Button(c.SCREEN_WIDTH + 50, 300, fast_foward_image, False) # se for true o botao é só de um clique mas o false vc segura
 
 # Loop do jogo
 def game_loop():
-    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over,world #declarara variaveis globais
+    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over,world, game_outcome #declarara variaveis globais
     run = True
     while run:
         clock.tick(c.FPS)
-        screen.fill("grey100")
 
         if game_over == False:
             #checa se o jogador perdeu
@@ -135,13 +156,13 @@ def game_loop():
                 game_over = True
                 game_outcome = -1 #perdeu
             #checa se o jogador ganhou
-            if world.level > c.TOTAL_LEVELS and world.check_level_complete():
+            if world.level > c.TOTAL_LEVELS:
                 game_over = True
                 game_outcome = 1 #ganhou uhu
 
             # Atualiza
             enemy_group.update(world)
-            turret_group.update(enemy_group)
+            turret_group.update(enemy_group, world)
 
             # Highlight da torre selecionada
             if selected_turret:
@@ -153,9 +174,7 @@ def game_loop():
         for turret in turret_group:
             turret.draw(screen)
         
-        draw_text(str(world.health), text_font, "grey100", 0, 0) 
-        draw_text(str(world.money), text_font, "grey100", 0, 30) 
-        draw_text(str(world.level), text_font, "grey100", 0, 60) 
+        display_data()
 
         if game_over == False:
             #spawn enemies
@@ -163,6 +182,10 @@ def game_loop():
                 if begin_button.draw(screen):
                     level_started = True
             else:
+                #acelerar os inimigos
+                world.game_speed = 1
+                if fast_foward_button.draw(screen):
+                    world.game_speed = 3
                 if pg.time.get_ticks() - last_enemy_spawn > c.SPAWN_COOLDOWN:
                     if world.spawned_enemies < len(world.enemy_list):
                         enemy_type = world.enemy_list[world.spawned_enemies]
@@ -180,6 +203,10 @@ def game_loop():
                 world.reset_level()
                 world.process_enemies()
 
+            #botão para colocar uma turret
+            #desenhar o botão e mostrar preço
+            draw_text(str(c.BUY_COST), text_font, "grey100", c.SCREEN_WIDTH + 205, 135)
+            screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 130))
             if turret_button.draw(screen):
                 placing_turrets = True
             
@@ -195,6 +222,8 @@ def game_loop():
             #botão de upgrade aparece se um turret for selecionado
             if selected_turret:
                 if selected_turret.upgrade_level < c.TURRET_LEVELS:
+                    draw_text(str(c.UPGRADE_COST), text_font, "grey100", c.SCREEN_WIDTH + 217, 195)
+                    screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 190))
                     if upgrade_button.draw(screen):
                         if world.money >= c.UPGRADE_COST:
                             selected_turret.upgrade()
@@ -203,7 +232,7 @@ def game_loop():
             pg.draw.rect(screen, "dodgerblue", (200, 200, 400, 200), border_radius = 30)
             if game_outcome == -1:
                 draw_text("GAME OVER :(", large_font, "grey0", 310, 230)
-            elif game_outcome ==1:
+            elif game_outcome == 1:
                 draw_text("DIVOU!!! ;)", large_font, "grey0", 315, 230)
             #restart level
             if restart_button.draw(screen):

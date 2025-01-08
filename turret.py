@@ -4,7 +4,7 @@ import math
 from turret_data import TURRET_DATA
 
 class Turret(pg.sprite.Sprite):
-  def __init__(self, sprite_sheets, tile_x, tile_y):
+  def __init__(self, sprite_sheets, tile_x, tile_y, shot_fx):
     pg.sprite.Sprite.__init__(self)
     self.upgrade_level = 1
     self.range = TURRET_DATA[self.upgrade_level - 1].get("range")
@@ -19,6 +19,8 @@ class Turret(pg.sprite.Sprite):
     #calculate center coordinates
     self.x = (self.tile_x + 0.5) * c.TILE_SIZE
     self.y = (self.tile_y + 0.5) * c.TILE_SIZE
+    #som dos tiros
+    self.shot_fx = shot_fx
     
     self.sprite_sheets = sprite_sheets
     
@@ -54,13 +56,13 @@ class Turret(pg.sprite.Sprite):
     return animation_list
   
   
-  def update(self, enemy_group):
+  def update(self, enemy_group, world):
     #se tiver um alvo no range, a animação vai rodar
     if self.target:
       self.play_animation()
     else:
       #procura novo alvo
-      if pg.time.get_ticks() - self.last_shot > self.cooldown:
+      if pg.time.get_ticks() - self.last_shot > (self.cooldown / world.game_speed):
         
         self.pick_target(enemy_group)
 
@@ -79,6 +81,8 @@ class Turret(pg.sprite.Sprite):
           self.angle = math.degrees(math.atan2(-y_dist, x_dist))
           #danificar enemy
           self.target.health -= c.DAMAGE
+          #tocar som
+          self.shot_fx.play
           break
 
   def play_animation(self):
