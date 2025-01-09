@@ -63,7 +63,6 @@ class Turret(pg.sprite.Sprite):
     else:
       #procura novo alvo
       if pg.time.get_ticks() - self.last_shot > (self.cooldown / world.game_speed):
-        
         self.pick_target(enemy_group)
 
   def pick_target(self, enemy_group):

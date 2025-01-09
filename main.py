@@ -66,7 +66,6 @@ fast_foward_image = pg.image.load('coisas/images/botoes/fast_foward.png').conver
 #gui
 heart_image = pg.image.load('coisas/images/interface/heart.png').convert_alpha()
 coin_image = pg.image.load('coisas/images/interface/coin.png').convert_alpha()
-logo_image = pg.image.load('coisas/images/interface/logo.png').convert_alpha()
 
 #sons
 shot_fx = pg.mixer.Sound('coisas/sons/shot.wav')
@@ -87,15 +86,17 @@ def draw_text(text, font, text_col, x, y):
 
 def display_data():
     #desenha painel
-    pg.draw.rect(screen, "darkblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT ))
-    pg.draw.rect(screen, "white", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, 400 ), 4)
-    screen.blit(logo_image, (c.SCREEN_WIDTH, 400))
+    pg.draw.rect(screen, "midnightblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT ))
+    #pg.draw.rect(screen, "white", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, 400 ), 4)
+    #screen.blit(logo_image, (c.SCREEN_WIDTH, 400))
     #display informações
-    draw_text("LEVEL: " + str(world.level), text_font, "grey100", c.SCREEN_WIDTH + 15, 15) 
-    screen.blit(heart_image, (c.SCREEN_WIDTH +15, 40))
-    draw_text(str(world.health), text_font, "grey100", c.SCREEN_WIDTH + 55, 45) 
-    screen.blit(coin_image, (c.SCREEN_WIDTH + 15, 70))
-    draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 55, 75 ) 
+    pg.draw.rect(screen, "steelblue4", (c.SCREEN_WIDTH + 70, 16, 170, 40 ), border_radius = 30)
+    draw_text("NÍVEL: " + str(world.level), text_font, "grey100", c.SCREEN_WIDTH + 100, 22) 
+    screen.blit(heart_image, (c.SCREEN_WIDTH + 115, 60))
+    draw_text(str(world.health), text_font, "grey100", c.SCREEN_WIDTH + 155, 65) 
+    screen.blit(coin_image, (c.SCREEN_WIDTH + 115, 90))
+    draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 155, 95 ) 
+    #draw_text("Para fazer upgrades, selecione a torre que deseja alterar.", text_font, "grey100", c.SCREEN_WIDTH + 20, 600)
 
 # Função para criar uma torre
 def create_turret(mouse_pos):
@@ -136,12 +137,12 @@ enemy_group = pg.sprite.Group()
 turret_group = pg.sprite.Group()
 
 #cria botao
-turret_button = Button(c.SCREEN_WIDTH + 30, 120, buy_turret_image, True)
-cancel_button = Button(c.SCREEN_WIDTH + 50, 180, cancel_image, True)
+turret_button = Button(c.SCREEN_WIDTH + 30, 150, buy_turret_image, True)
+cancel_button = Button(c.SCREEN_WIDTH + 60, 150, cancel_image, True)
 upgrade_button = Button(c.SCREEN_WIDTH + 5, 180, upgrade_turret_image, True)
-begin_button = Button(c.SCREEN_WIDTH + 5, 300, begin_image, True)
+begin_button = Button(c.SCREEN_WIDTH + 70, 300, begin_image, True)
 restart_button = Button(310, 300, restart_image, True)
-fast_foward_button = Button(c.SCREEN_WIDTH + 50, 300, fast_foward_image, False) # se for true o botao é só de um clique mas o false vc segura
+fast_foward_button = Button(c.SCREEN_WIDTH + 60, 300, fast_foward_image, False) # se for true o botao é só de um clique mas o false vc segura
 
 # Loop do jogo
 def game_loop():
@@ -205,11 +206,12 @@ def game_loop():
 
             #botão para colocar uma turret
             #desenhar o botão e mostrar preço
-            draw_text(str(c.BUY_COST), text_font, "grey100", c.SCREEN_WIDTH + 205, 135)
-            screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 130))
-            if turret_button.draw(screen):
-                placing_turrets = True
-            
+            if not placing_turrets:
+                draw_text(str(c.BUY_COST), text_font, "grey100", c.SCREEN_WIDTH + 205, 165)
+                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 160))
+                if turret_button.draw(screen):
+                    placing_turrets = True
+                
             if placing_turrets:
                 cursor_rect = cursor_turret.get_rect()
                 cursor_pos = pg.mouse.get_pos()
