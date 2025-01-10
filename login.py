@@ -2,135 +2,167 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 
-def criar_banco():
-    conn = sqlite3.connect('ranking.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS ranking (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario TEXT NOT NULL,
-            pontos INTEGER NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+class Usuario:
+    def __init__(self):
+        self.__usuario_logado = None
 
-def inserir_ranking(usuario, pontos):
-    conn = sqlite3.connect('ranking.db')
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO ranking (usuario, pontos) VALUES (?, ?)
-    ''', (usuario, pontos))
-    conn.commit()
-    conn.close()
+    def set_usuario_logado(self, usuario):
+        self.__usuario_logado = usuario
 
-def exibir_ranking():
-    conn = sqlite3.connect('ranking.db')
-    c = conn.cursor()
-    c.execute('''
-        SELECT usuario, pontos FROM ranking ORDER BY pontos DESC LIMIT 10
-    ''')
-    ranking = c.fetchall()
-    conn.close()
-    
-    print("Ranking Top 10:")
-    for i, (usuario, pontos) in enumerate(ranking, 1):
-        print(f"{i}. {usuario} - {pontos} pontos")
+    def get_usuario_logado(self):
+        return self.__usuario_logado
 
-def ler_dados_arquivo():
-    try:
-        with open('banco_dados.txt', 'r') as arquivo:
-            dados = arquivo.readlines()
-        return [linha.strip().split(',') for linha in dados]
-    except FileNotFoundError:
-        with open('banco_dados.txt', 'w'):
-            pass
-        return []
+    def verificar_login(self, entry_usuario, entry_senha):
+        usuario = entry_usuario.get()
+        senha = entry_senha.get()
 
-def verificar_login():
-    global usuario_logado  
-    usuario = entry_usuario.get()
-    senha = entry_senha.get()
-
-    if not usuario or not senha:
-        messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
-        return
-
-    dados = ler_dados_arquivo()
-
-    for u, s in dados:
-        if u == usuario and s == senha:
-            usuario_logado = usuario
-            messagebox.showinfo("Login bem-sucedido", f"Bem-vindo, {usuario}!")
+        if not usuario or not senha:
+            messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
             return
 
-    messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+        dados = self.ler_dados_arquivo()
 
-def registrar_usuario():
-    usuario = entry_usuario.get()
-    senha = entry_senha.get()
+        for u, s in dados:
+            if u == usuario and self.__verificar_senha(s, senha):  # Senha privada
+                self.set_usuario_logado(usuario)
+                messagebox.showinfo("Login bem-sucedido", f"Bem-vindo, {usuario}!")
+                return
 
-    if not usuario or not senha:
-        messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
-        return
+        messagebox.showerror("Erro", "Usuário ou senha incorretos.")
 
-    dados = ler_dados_arquivo()
+    def registrar_usuario(self, entry_usuario, entry_senha):
+        usuario = entry_usuario.get()
+        senha = entry_senha.get()
 
-    for u, s in dados:
-        if u == usuario:
-            messagebox.showerror("Erro", "Usuário já existe.")
+        if not usuario or not senha:
+            messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
             return
 
-    try:
-        with open('banco_dados.txt', 'a') as arquivo:
-            arquivo.write(f"{usuario},{senha}\n")
-        messagebox.showinfo("Cadastro bem-sucedido", "Usuário registrado com sucesso!")
-    except IOError as e:
-        messagebox.showerror("Erro", f"Erro ao registrar o usuário: {e}")
+        dados = self.ler_dados_arquivo()
 
-def registrar_pontuacao():
-    global usuario_logado
-    if usuario_logado:
+        for u, s in dados:
+            if u == usuario:
+                messagebox.showerror("Erro", "Usuário já existe.")
+                return
+
         try:
-            pontos = int(entry_pontuacao.get())
-            inserir_ranking(usuario_logado, pontos)
-            messagebox.showinfo("Pontuação registrada", f"{usuario_logado}, sua pontuação foi registrada!")
-            exibir_ranking()  
-        except ValueError:
-            messagebox.showerror("Erro", "Por favor, insira uma pontuação válida.")
-    else:
-        messagebox.showerror("Erro", "Você precisa estar logado para registrar a pontuação.")
+            with open('banco_dados.txt', 'a') as arquivo:
+                arquivo.write(f"{usuario},{self.__criptografar_senha(senha)}\n")  # Senha criptografada
+            messagebox.showinfo("Cadastro bem-sucedido", "Usuário registrado com sucesso!")
+        except IOError as e:
+            messagebox.showerror("Erro", f"Erro ao registrar o usuário: {e}")
 
-def criar_tela_login():
-    global entry_usuario, entry_senha, entry_pontuacao, usuario_logado
-    usuario_logado = None  
+    def __verificar_senha(self, senha_armazenada, senha_digitada):
+        # Compara a senha invertida com a senha digitada invertida
+        return senha_armazenada == self.__criptografar_senha(senha_digitada)
 
-    root = tk.Tk()
-    root.title("Página de Login")
+    def __criptografar_senha(self, senha):
+        # Simples criptografia (inversão da senha como exemplo)
+        return senha[::-1]  # Inverte a senha como exemplo de criptografia
 
-    tk.Label(root, text="Usuário:").grid(row=0, column=0, padx=10, pady=10)
-    entry_usuario = tk.Entry(root)
-    entry_usuario.grid(row=0, column=1, padx=10, pady=10)
+    def ler_dados_arquivo(self):
+        try:
+            with open('banco_dados.txt', 'r') as arquivo:
+                dados = arquivo.readlines()
+            return [linha.strip().split(',') for linha in dados]
+        except FileNotFoundError:
+            with open('banco_dados.txt', 'w'):
+                pass
+            return []
 
-    tk.Label(root, text="Senha:").grid(row=1, column=0, padx=10, pady=10)
-    entry_senha = tk.Entry(root, show="*")
-    entry_senha.grid(row=1, column=1, padx=10, pady=10)
+class Ranking:
+    @staticmethod
+    def criar_banco():
+        conn = sqlite3.connect('ranking.db')
+        c = conn.cursor()
+        c.execute(''' 
+            CREATE TABLE IF NOT EXISTS ranking (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario TEXT NOT NULL,
+                pontos INTEGER NOT NULL
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
-    botao_login = tk.Button(root, text="Login", command=verificar_login)
-    botao_login.grid(row=2, column=0, columnspan=2, pady=10)
+    @staticmethod
+    def inserir_ranking(usuario, pontos):
+        conn = sqlite3.connect('ranking.db')
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO ranking (usuario, pontos) VALUES (?, ?)
+        ''', (usuario, pontos))
+        conn.commit()
+        conn.close()
 
-    botao_registrar = tk.Button(root, text="Registrar", command=registrar_usuario)
-    botao_registrar.grid(row=3, column=0, columnspan=2, pady=10)
+    @staticmethod
+    def exibir_ranking():
+        conn = sqlite3.connect('ranking.db')
+        c = conn.cursor()
+        c.execute('''
+            SELECT usuario, pontos FROM ranking ORDER BY pontos DESC LIMIT 10
+        ''')
+        ranking = c.fetchall()
+        conn.close()
 
-    tk.Label(root, text="Pontuação:").grid(row=4, column=0, padx=10, pady=10)
-    entry_pontuacao = tk.Entry(root)
-    entry_pontuacao.grid(row=4, column=1, padx=10, pady=10)
+        print("Ranking Top 10:")
+        for i, (usuario, pontos) in enumerate(ranking, 1):
+            print(f"{i}. {usuario} - {pontos} pontos")
 
-    botao_pontuacao = tk.Button(root, text="Registrar Pontuação", command=registrar_pontuacao)
-    botao_pontuacao.grid(row=5, column=0, columnspan=2, pady=10)
 
-    root.mainloop()
+class App:
+    def __init__(self):
+        self.usuario = Usuario()
+        self.root = tk.Tk()
+        self.root.title("Página de Login")
+        self.entry_usuario = None
+        self.entry_senha = None
+        self.entry_pontuacao = None
+        self.criar_tela_login()
 
-criar_banco()
+    def criar_tela_login(self):
+        tk.Label(self.root, text="Usuário:").grid(row=0, column=0, padx=10, pady=10)
+        self.entry_usuario = tk.Entry(self.root)
+        self.entry_usuario.grid(row=0, column=1, padx=10, pady=10)
 
-criar_tela_login()
+        tk.Label(self.root, text="Senha:").grid(row=1, column=0, padx=10, pady=10)
+        self.entry_senha = tk.Entry(self.root, show="*")
+        self.entry_senha.grid(row=1, column=1, padx=10, pady=10)
+
+        botao_login = tk.Button(self.root, text="Login", command=self.verificar_login)
+        botao_login.grid(row=2, column=0, columnspan=2, pady=10)
+
+        botao_registrar = tk.Button(self.root, text="Registrar", command=self.registrar_usuario)
+        botao_registrar.grid(row=3, column=0, columnspan=2, pady=10)
+
+        tk.Label(self.root, text="Pontuação:").grid(row=4, column=0, padx=10, pady=10)
+        self.entry_pontuacao = tk.Entry(self.root)
+        self.entry_pontuacao.grid(row=4, column=1, padx=10, pady=10)
+
+        botao_pontuacao = tk.Button(self.root, text="Registrar Pontuação", command=self.registrar_pontuacao)
+        botao_pontuacao.grid(row=5, column=0, columnspan=2, pady=10)
+
+        self.root.mainloop()
+
+    def verificar_login(self):
+        self.usuario.verificar_login(self.entry_usuario, self.entry_senha)
+
+    def registrar_usuario(self):
+        self.usuario.registrar_usuario(self.entry_usuario, self.entry_senha)
+
+    def registrar_pontuacao(self):
+        usuario_logado = self.usuario.get_usuario_logado()
+        if usuario_logado:
+            try:
+                pontos = int(self.entry_pontuacao.get())
+                Ranking.inserir_ranking(usuario_logado, pontos)
+                messagebox.showinfo("Pontuação registrada", f"{usuario_logado}, sua pontuação foi registrada!")
+                Ranking.exibir_ranking()
+            except ValueError:
+                messagebox.showerror("Erro", "Por favor, insira uma pontuação válida.")
+        else:
+            messagebox.showerror("Erro", "Você precisa estar logado para registrar a pontuação.")
+
+if __name__ == "__main__":
+    Ranking.criar_banco()
+    app = App()
