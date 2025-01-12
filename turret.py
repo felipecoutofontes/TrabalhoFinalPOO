@@ -81,7 +81,7 @@ class Turret(pg.sprite.Sprite):
           #danificar enemy
           self.target.health -= c.DAMAGE
           #tocar som
-          self.shot_fx.play
+          self.shot_fx.play()
           break
 
   def play_animation(self):
