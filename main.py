@@ -13,9 +13,6 @@ from ranking import RankingScreen
 from database import save_score, save_progress, get_progress
 
 
-# Inicia o pygame
-pg.init()
-
 
 # Configura a música de fundo
 pg.mixer.music.load('coisas/sons/musica.mp3')  # Caminho para o arquivo de música
@@ -232,7 +229,6 @@ def initialize_game():
 
 # Função para inicializar o Pygame e criar a tela
 def init_game():
-    pg.init()
     screen = pg.display.set_mode((c.LARGURA_TOTAL, c.SCREEN_HEIGHT))
     pg.display.set_caption("Tower Defense")
     return screen
@@ -419,6 +415,7 @@ def game_loop(screen, username):
 
 
 def main():
+    pg.init()
     screen = init_game()  # Inicializa a tela do jogo
     clock = pg.time.Clock()  # Configura o relógio para controlar a taxa de quadros
 
