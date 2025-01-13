@@ -367,7 +367,7 @@ def game_loop(screen, username):
             pg.draw.rect(screen, "dodgerblue", (200, 200, 400, 200), border_radius=30)
             draw_text(
                 "GAME OVER :(" if game_outcome == -1 else "DIVOU!",
-                large_font, "grey0", 400, 300
+                large_font, "grey0", 310, 220
             )
             if restart_button.draw(screen):
                 initialize_game()
