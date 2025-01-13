@@ -6,21 +6,27 @@ def connect_db():
     return conn
 
 def create_tables():
-    # Criar as tabelas necessárias no banco de dados.
     conn = connect_db()
     cursor = conn.cursor()
 
-    # Criar a tabela de usuários
+    # Tabela de usuários
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT UNIQUE,
                         password TEXT)''')
 
-    # Criar a tabela de pontuações
+    # Tabela de pontuações
     cursor.execute('''CREATE TABLE IF NOT EXISTS scores (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT,
                         score INTEGER)''')
+
+    # Tabela de progresso (nível e score)
+    cursor.execute('''CREATE TABLE IF NOT EXISTS progress (
+                        username TEXT UNIQUE,
+                        level INTEGER,
+                        score INTEGER,
+                        FOREIGN KEY (username) REFERENCES users(username))''')
 
     conn.commit()
     conn.close()
@@ -62,6 +68,22 @@ def get_rankings():
     rankings = cursor.fetchall()
     conn.close()
     return rankings
+
+def save_progress(username, level, score):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute('''INSERT OR REPLACE INTO progress (username, level, score)
+                      VALUES (?, ?, ?)''', (username, level, score))
+    conn.commit()
+    conn.close()
+
+def get_progress(username):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT level, score FROM progress WHERE username=?", (username,))
+    progress = cursor.fetchone()
+    conn.close()
+    return progress if progress else (1, 0)  # Se não houver progresso, começa do nível 1
 
 # Inicializar o banco de dados
 create_tables()
