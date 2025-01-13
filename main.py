@@ -241,6 +241,9 @@ def init_game():
 def game_loop(screen, username):
     global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
 
+    # Variável para controlar se o progresso foi salvo no nível atual
+    level_completed = False
+
     # Carregar progresso
     level, score = get_progress(username)
     world.level = level  # Definir o nível atual com o valor carregado
@@ -289,7 +292,7 @@ def game_loop(screen, username):
                         last_enemy_spawn = pg.time.get_ticks()
 
                 #checar se a onda de enemies acabou
-                if world.check_level_complete() == True:
+                if world.check_level_complete() == True and not level_completed:
                     world.money += c.LEVEL_COMPLETE_REWARD
                     world.level += 1
                     level_started = False
@@ -301,8 +304,14 @@ def game_loop(screen, username):
                     save_progress(username, world.level, world.pontuacao)
 
                     # Salvar a pontuação no banco de dados após o nível
-                save_score(username, world.pontuacao)
-                print(f"Pontuação de {username} salva: {world.pontuacao}")
+                    save_score(username, world.pontuacao)
+                    print(f"Pontuação de {username} salva: {world.pontuacao}")
+
+                    # Atualize o flag para evitar salvamentos repetidos
+                    level_completed = True
+
+                    # Resetando o flag para o próximo nível
+                    level_completed = False  
 
                     
                     
