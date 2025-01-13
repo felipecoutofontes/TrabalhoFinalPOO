@@ -128,15 +128,20 @@ def draw_text(text, font, text_col, x, y):
     screen.blit(img, (x, y))
 
 def display_data():
-    #desenha painel
-    pg.draw.rect(screen, "midnightblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT ))
-    #display informações
-    pg.draw.rect(screen, "steelblue4", (c.SCREEN_WIDTH + 70, 16, 170, 40 ), border_radius = 30)
+    # Desenha painel
+    pg.draw.rect(screen, "midnightblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT))
+    
+    # Exibe informações
+    pg.draw.rect(screen, "steelblue4", (c.SCREEN_WIDTH + 70, 16, 170, 40), border_radius=30)
     draw_text("NÍVEL: " + str(world.level), text_font, "grey100", c.SCREEN_WIDTH + 100, 22) 
     screen.blit(heart_image, (c.SCREEN_WIDTH + 115, 60))
     draw_text(str(world.health), text_font, "grey100", c.SCREEN_WIDTH + 155, 65) 
     screen.blit(coin_image, (c.SCREEN_WIDTH + 115, 90))
-    draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 155, 95 ) 
+    draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 155, 95)
+    
+    # Atualiza e exibe a pontuação
+    world.update_score()  # Atualiza a pontuação
+    draw_text(f"PONTUAÇÃO: {world.pontuacao}", text_font, "grey100", c.SCREEN_WIDTH + 100, 130)  # Exibe a pontuação 
 
 # Função para criar uma torre
 def create_turret(mouse_pos, turret_type):
