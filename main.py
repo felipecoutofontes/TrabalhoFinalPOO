@@ -96,8 +96,8 @@ enemy_images = {
 
 #botoes
 buy_turretbasica_image = load_and_scale_button('coisas/images/botoes/buy_turret1.png')
-buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
-buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
+buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
+buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
 buy_turrettop_image = load_and_scale_button('coisas/images/botoes/buy_turret4.png')
 cancel_image = load_and_scale_button('coisas/images/botoes/cancel.png')
 begin_image = load_and_scale_button_maior('coisas/images/botoes/begin.png')
@@ -205,7 +205,7 @@ pause_button = Button(c.SCREEN_WIDTH + 15, 60, pause_button_image, single_click=
 fast_forward_active = False
 world.game_speed = 1
 paused = False #variável para o estado de pausa
-show_begin_button = True
+
 
 
 def resume_game():
@@ -213,7 +213,7 @@ def resume_game():
     paused = False
 
 def initialize_game():
-    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over, world, game_outcome, paused, show_begin_button
+    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over, world, game_outcome, paused
 
     
     placing_turrets = False
@@ -238,7 +238,7 @@ def init_game():
 
 # Loop do jogo
 def game_loop(screen, username):
-    global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
+    global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused
 
     run = True
     while run:
@@ -303,9 +303,9 @@ def game_loop(screen, username):
 
         if not game_over:
             # Botão de início do nível
-            if show_begin_button and begin_button.draw(screen):
+            if begin_button.draw(screen):
                 level_started = True
-                show_begin_button = False  # Esconde o botão ao ser pressionado
+        
           
         # Botão de fast forward
         if fast_foward_button.draw(screen):
@@ -399,6 +399,7 @@ def game_loop(screen, username):
 
 
 def main():
+    pg.init()
     screen = init_game()
     clock = pg.time.Clock()
 
@@ -437,6 +438,7 @@ def main():
                     break  # Sai do ranking e volta para o menu
 
         # Outra lógica do menu pode ser adicionada aqui para alternar entre telas.
+    pg.quit()    
 
 if __name__ == "__main__":
     main()

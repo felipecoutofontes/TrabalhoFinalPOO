@@ -26,7 +26,7 @@ class RankingScreen(Screen):  # Aqui herda de Screen (classe base)
             draw_text(self.screen, f"{idx}. {username} - {score}", self.small_font, (0, 0, 0),
                       self.screen.get_width() // 2, 100 + (30 * idx))
 
-        draw_text(self.screen, "Clique em qualquer lugar para voltar", self.small_font, (0, 0, 0),
+        draw_text(self.screen, "Clique com o botão direito para voltar", self.small_font, (0, 0, 0),
                   self.screen.get_width() // 2, self.screen.get_height() - 50)
 
     def handle_events(self):
