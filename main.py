@@ -50,6 +50,22 @@ def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
     image = pg.image.load(path).convert_alpha()
     return pg.transform.scale(image, size)
 
+def load_and_scale_button(path, size=(205, 50)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
+def load_and_scale_button_maior(path, size=(215, 60)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
+def load_and_scale_coin(path, size=(27, 27)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
+def load_and_scale_pause(path, size=(60, 45)):
+    image = pg.image.load(path).convert_alpha()
+    return pg.transform.scale(image, size)
+
 # Carregar imagens
 map_image = load_and_scale_image2('coisas/images/fases/level.png')
 
@@ -76,20 +92,21 @@ enemy_images = {
 }
 
 #botoes
-buy_turretbasica_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
-buy_turretslow_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
-buy_turretsniper_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
-buy_turrettop_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
-cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
-begin_image = pg.image.load('coisas/images/botoes/begin.png').convert_alpha()
-restart_image = pg.image.load('coisas/images/botoes/restart.png').convert_alpha()
-fast_foward_image = pg.image.load('coisas/images/botoes/fast_foward.png').convert_alpha()
-pause_button_image = load_and_scale_image1('coisas/images/botoes/pause.png')
+buy_turretbasica_image = load_and_scale_button('coisas/images/botoes/buy_turret1.png')
+buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
+buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
+buy_turrettop_image = load_and_scale_button('coisas/images/botoes/buy_turret4.png')
+cancel_image = load_and_scale_button('coisas/images/botoes/cancel.png')
+begin_image = load_and_scale_button_maior('coisas/images/botoes/begin.png')
+restart_image = load_and_scale_button('coisas/images/botoes/restart.png')
+fast_foward_image = load_and_scale_button_maior('coisas/images/botoes/fast_foward.png')
+pause_button_image = load_and_scale_pause('coisas/images/botoes/pause.png')
 
 
 #gui
 heart_image = pg.image.load('coisas/images/interface/heart.png').convert_alpha()
 coin_image = pg.image.load('coisas/images/interface/coin.png').convert_alpha()
+coin_turret_image = load_and_scale_coin('coisas/images/interface/coin.png')
 
 #sons
 shot_fx = pg.mixer.Sound('coisas/sons/shot.wav')
@@ -101,6 +118,7 @@ with open('levels/level.tmj') as file:
 
 #carregar fontes de display
 text_font = pg.font.SysFont("Consolas", 24, bold = True)
+medium_font = pg.font.SysFont("Consolas", 23, bold = True)
 large_font = pg.font.SysFont("Consolas", 36)
 
 #função pra saida de texto na tela
@@ -170,15 +188,15 @@ enemy_group = pg.sprite.Group()
 turret_group = pg.sprite.Group()
 
 #cria botao
-turretbasica_button = Button(c.SCREEN_WIDTH + 30, 150, buy_turretbasica_image, True)
-turretsniper_button = Button(c.SCREEN_WIDTH + 30, 190, buy_turretsniper_image, True)
-turretslow_button = Button(c.SCREEN_WIDTH + 30, 230, buy_turretslow_image, True)
-turrettop_button = Button(c.SCREEN_WIDTH + 30, 270, buy_turrettop_image, True)
-cancel_button = Button(c.SCREEN_WIDTH + 60, 150, cancel_image, True)
-begin_button = Button(c.SCREEN_WIDTH + 70, 300, begin_image, True)
+turretbasica_button = Button(c.SCREEN_WIDTH + 15, 190, buy_turretbasica_image, True)
+turretsniper_button = Button(c.SCREEN_WIDTH + 15, 250, buy_turretsniper_image, True)
+turretslow_button = Button(c.SCREEN_WIDTH + 15, 310, buy_turretslow_image, True)
+turrettop_button = Button(c.SCREEN_WIDTH + 15, 370, buy_turrettop_image, True)
+cancel_button = Button(c.SCREEN_WIDTH + 30, 280, cancel_image, True)
+begin_button = Button(c.SCREEN_WIDTH + 50, 520, begin_image, True)
 restart_button = Button(310, 300, restart_image, True)
-fast_foward_button = Button(c.SCREEN_WIDTH + 60, 450, fast_foward_image, single_click=True) # se for true o botao é só de um clique mas o false vc segura
-pause_button = Button(c.SCREEN_WIDTH + 30, 10, pause_button_image, single_click=True)
+fast_foward_button = Button(c.SCREEN_WIDTH + 50, 580, fast_foward_image, single_click=True) # se for true o botao é só de um clique mas o false vc segura
+pause_button = Button(c.SCREEN_WIDTH + 15, 60, pause_button_image, single_click=True)
 
 
 fast_forward_active = False
@@ -290,26 +308,26 @@ def game_loop():
 
         # Lógica de posicionamento de torres
         if not placing_turrets:
-                draw_text(f"{c.BUY_BASIC}", text_font, "grey100", c.SCREEN_WIDTH + 205, 165)
-                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 160))
+                draw_text(f"{c.BUY_BASIC}", medium_font, "grey100", c.SCREEN_WIDTH + 222, 206)
+                screen.blit(coin_turret_image, (c.SCREEN_WIDTH + 265, 202))
                 if turretbasica_button.draw(screen):
                     placing_turrets = True
                     selected_turret_type = 'basic'
 
-                draw_text(f"{c.BUY_SNIPER}", text_font, "grey100", c.SCREEN_WIDTH + 205, 265)
-                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 260))
+                draw_text(f"{c.BUY_SNIPER}", medium_font, "grey100", c.SCREEN_WIDTH + 222, 266)
+                screen.blit(coin_turret_image, (c.SCREEN_WIDTH + 265, 262))
                 if turretsniper_button.draw(screen):
                     placing_turrets = True
                     selected_turret_type = 'sniper'
 
-                draw_text(f"{c.BUY_SLOW}", text_font, "grey100", c.SCREEN_WIDTH + 205, 365)
-                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 360))
+                draw_text(f"{c.BUY_SLOW}", medium_font, "grey100", c.SCREEN_WIDTH + 222, 326)
+                screen.blit(coin_turret_image, (c.SCREEN_WIDTH + 265, 322))
                 if turretslow_button.draw(screen):
                     placing_turrets = True
                     selected_turret_type = 'slow'
 
-                draw_text(f"{c.BUY_TOP}", text_font, "grey100", c.SCREEN_WIDTH + 205, 465)
-                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 460))
+                draw_text(f"{c.BUY_TOP}", medium_font, "grey100", c.SCREEN_WIDTH + 222, 386)
+                screen.blit(coin_turret_image, (c.SCREEN_WIDTH + 265, 382))
                 if turrettop_button.draw(screen):
                     placing_turrets = True
                     selected_turret_type = 'top'
