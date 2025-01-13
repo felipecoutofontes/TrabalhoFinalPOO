@@ -19,7 +19,7 @@ pg.init()
 
 # Configura a música de fundo
 pg.mixer.music.load('coisas/sons/musica.mp3')  # Caminho para o arquivo de música
-pg.mixer.music.set_volume(0.5)  # Define o volume inicial (ajustável)
+pg.mixer.music.set_volume(0.3)  # Define o volume inicial (ajustável)
 pg.mixer.music.play(-1)  # Toca a música em loop (-1 indica repetição infinita)
 
 # Cria o clock
@@ -97,8 +97,8 @@ enemy_images = {
 
 #botoes
 buy_turretbasica_image = load_and_scale_button('coisas/images/botoes/buy_turret1.png')
-buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
-buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
+buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
+buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
 buy_turrettop_image = load_and_scale_button('coisas/images/botoes/buy_turret4.png')
 cancel_image = load_and_scale_button('coisas/images/botoes/cancel.png')
 begin_image = load_and_scale_button_maior('coisas/images/botoes/begin.png')
@@ -277,7 +277,7 @@ def game_loop(screen, username):
             else:
                 #acelerar os inimigos
                 if fast_foward_button.active:
-                    world.game_speed = 3
+                    world.game_speed = 4
                 else:
                     world.game_speed = 1    
                 if pg.time.get_ticks() - last_enemy_spawn > c.SPAWN_COOLDOWN:
@@ -323,7 +323,7 @@ def game_loop(screen, username):
           
         # Botão de fast forward
         if fast_foward_button.draw(screen):
-            world.game_speed = 3
+            world.game_speed = 4
         
         # Botão de pausa
         if not game_over and pause_button.draw(screen):
@@ -407,9 +407,6 @@ def game_loop(screen, username):
 
 
     pg.quit()
-
-
-
 
 
 def main():
