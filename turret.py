@@ -5,6 +5,8 @@ import constants as c
 from enemy_data import ENEMY_DATA
 from enemy import Enemy
 
+pg.init()
+
 class Turret(pg.sprite.Sprite, ABC):
     def __init__(self, sprite_sheet, tile_x, tile_y, range, cooldown, damage):
         super().__init__()
@@ -85,11 +87,21 @@ class TurretBasica(Turret, pg.sprite.Sprite):
         super().__init__(sprite_sheet, tile_x, tile_y, range=150, cooldown=1000, damage=10)
 
     def update(self, enemy_group, world):
+       #verifica se o alvo atual ainda é valido
+        if self.target:
+            x_dist = self.target.pos[0] - self.x
+            y_dist = self.target.pos[1] - self.y
+            dist = math.sqrt(x_dist**2 + y_dist**2)
+            if dist > self.range or self.target.health <= 0:
+                self.target = None
+
+        #seleciona novo alvo
+        if not self.target and pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
+            self.pick_target(enemy_group)
+
+        #toca a animação
         if self.target:
             self.play_animation()
-        else:
-            if pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
-                self.pick_target(enemy_group)
 
     def pick_target(self, enemy_group):
         x_dist = 0
@@ -104,7 +116,8 @@ class TurretBasica(Turret, pg.sprite.Sprite):
                     self.angle = math.degrees(math.atan2(-y_dist, x_dist))
                     #danificar o enemy
                     self.target.health -= self.damage
-                break
+                    self.last_shot = pg.time.get_ticks()
+                    break
 
 
 class TurretSniper(Turret, pg.sprite.Sprite):
@@ -112,11 +125,21 @@ class TurretSniper(Turret, pg.sprite.Sprite):
         super().__init__(sprite_sheet, tile_x, tile_y, range=250, cooldown=2000, damage=12)
 
     def update(self, enemy_group, world):
+       #verifica se o alvo atual ainda é valido
+        if self.target:
+            x_dist = self.target.pos[0] - self.x
+            y_dist = self.target.pos[1] - self.y
+            dist = math.sqrt(x_dist**2 + y_dist**2)
+            if dist > self.range or self.target.health <= 0:
+                self.target = None
+
+        #seleciona novo alvo
+        if not self.target and pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
+            self.pick_target(enemy_group)
+
+        #toca a animação
         if self.target:
             self.play_animation()
-        else:
-            if pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
-                self.pick_target(enemy_group)
 
     def pick_target(self, enemy_group):
         x_dist = 0
@@ -131,7 +154,6 @@ class TurretSniper(Turret, pg.sprite.Sprite):
                     self.angle = math.degrees(math.atan2(-y_dist, x_dist))
                     #danificar o enemy
                     self.target.health -= self.damage
-                break
 
 
 class TurretSlow(Turret, pg.sprite.Sprite):
@@ -143,12 +165,21 @@ class TurretSlow(Turret, pg.sprite.Sprite):
         self.current_time= pg.time.get_ticks()
 
     def update(self, enemy_group, world):
+       #verifica se o alvo atual ainda é valido
+        if self.target:
+            x_dist = self.target.pos[0] - self.x
+            y_dist = self.target.pos[1] - self.y
+            dist = math.sqrt(x_dist**2 + y_dist**2)
+            if dist > self.range or self.target.health <= 0 or self.target.speed <= self.target.original_speed:
+                self.target = None
+
+        #seleciona novo alvo
+        if not self.target and pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
+            self.pick_target(enemy_group)
+
+        #toca a animação
         if self.target:
             self.play_animation()
-            self.target = None
-        else:
-            if pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
-                self.pick_target(enemy_group)
 
 
     def pick_target(self, enemy_group):
@@ -165,7 +196,6 @@ class TurretSlow(Turret, pg.sprite.Sprite):
                     self.angle = math.degrees(math.atan2(-y_dist, x_dist))
                     self.target.speed *= self.slow_factor
                     self.target.health -= self.damage
-                    break
 
 
 class TurretTop(Turret, pg.sprite.Sprite):
@@ -175,11 +205,21 @@ class TurretTop(Turret, pg.sprite.Sprite):
         self.slow_duration = 120
 
     def update(self, enemy_group, world):
+       #verifica se o alvo atual ainda é valido
+        if self.target:
+            x_dist = self.target.pos[0] - self.x
+            y_dist = self.target.pos[1] - self.y
+            dist = math.sqrt(x_dist**2 + y_dist**2)
+            if dist > self.range or self.target.health <= 0:
+                self.target = None
+
+        #seleciona novo alvo
+        if not self.target and pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
+            self.pick_target(enemy_group)
+
+        #toca a animação
         if self.target:
             self.play_animation()
-        else:
-            if pg.time.get_ticks() - self.last_shot > (self.cooldown/ world.game_speed):
-                self.pick_target(enemy_group)
 
     def pick_target(self, enemy_group):
         x_dist = 0
@@ -194,4 +234,3 @@ class TurretTop(Turret, pg.sprite.Sprite):
                     self.angle = math.degrees(math.atan2(-y_dist, x_dist))
                     #danificar o enemy
                     self.target.health -= self.damage
-                break

@@ -4,6 +4,8 @@ import constants as c
 from telas import Screen
 from ranking import RankingScreen  # Importando a tela de Ranking
 
+pg.init()
+
 # Função para desenhar texto
 def draw_text(text, font, color, surface, x, y):
     text_obj = font.render(text, True, color)
