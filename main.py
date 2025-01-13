@@ -10,6 +10,7 @@ from menu import main_menu
 from pause_screen import tela_de_pause
 from login import TelaDeLogin
 from ranking import RankingScreen
+from database import save_score, save_progress, get_progress
 
 
 # Inicia o pygame
@@ -37,7 +38,6 @@ placing_turrets = False
 select_turret = None
 selected_turret = None
 enemy_type = "weak"
-show_begin_button= True
 
 
 
@@ -97,8 +97,8 @@ enemy_images = {
 
 #botoes
 buy_turretbasica_image = load_and_scale_button('coisas/images/botoes/buy_turret1.png')
-buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
-buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
+buy_turretslow_image = load_and_scale_button('coisas/images/botoes/buy_turret2.png')
+buy_turretsniper_image = load_and_scale_button('coisas/images/botoes/buy_turret3.png')
 buy_turrettop_image = load_and_scale_button('coisas/images/botoes/buy_turret4.png')
 cancel_image = load_and_scale_button('coisas/images/botoes/cancel.png')
 begin_image = load_and_scale_button_maior('coisas/images/botoes/begin.png')
@@ -206,7 +206,7 @@ pause_button = Button(c.SCREEN_WIDTH + 15, 60, pause_button_image, single_click=
 fast_forward_active = False
 world.game_speed = 1
 paused = False #variável para o estado de pausa
-
+show_begin_button = True
 
 
 def resume_game():
@@ -214,7 +214,7 @@ def resume_game():
     paused = False
 
 def initialize_game():
-    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over, world, game_outcome, paused
+    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over, world, game_outcome, paused, show_begin_button
 
     
     placing_turrets = False
@@ -240,6 +240,11 @@ def init_game():
 # Loop do jogo
 def game_loop(screen, username):
     global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
+
+    # Carregar progresso
+    level, score = get_progress(username)
+    world.level = level  # Definir o nível atual com o valor carregado
+    world.pontuacao = score  # Definir a pontuação
 
     run = True
     while run:
@@ -267,14 +272,12 @@ def game_loop(screen, username):
 
             # Spawn de inimigos
             if level_started == False:
-                show_begin_button = True
                 if begin_button.draw(screen):
                     level_started = True
-                    show_begin_button = False
             else:
                 #acelerar os inimigos
                 if fast_foward_button.active:
-                    world.game_speed = 4
+                    world.game_speed = 3
                 else:
                     world.game_speed = 1    
                 if pg.time.get_ticks() - last_enemy_spawn > c.SPAWN_COOLDOWN:
@@ -293,6 +296,14 @@ def game_loop(screen, username):
                     last_enemy_spawn = pg.time.get_ticks()
                     world.reset_level()
                     world.process_enemies()
+
+                    # Salvar progresso quando o nível é completado
+                    save_progress(username, world.level, world.pontuacao)
+
+                    # Salvar a pontuação no banco de dados após o nível
+                save_score(username, world.pontuacao)
+                print(f"Pontuação de {username} salva: {world.pontuacao}")
+
                     
                     
         # Desenho da tela
@@ -304,15 +315,15 @@ def game_loop(screen, username):
         # Exibir informações
         display_data()
 
-        if not game_over and show_begin_button == True:
+        if not game_over:
             # Botão de início do nível
-            if begin_button.draw(screen):
+            if show_begin_button and begin_button.draw(screen):
                 level_started = True
-        
+                show_begin_button = False  # Esconde o botão ao ser pressionado
           
         # Botão de fast forward
         if fast_foward_button.draw(screen):
-            world.game_speed = 4
+            world.game_speed = 3
         
         # Botão de pausa
         if not game_over and pause_button.draw(screen):
@@ -367,7 +378,7 @@ def game_loop(screen, username):
             pg.draw.rect(screen, "dodgerblue", (200, 200, 400, 200), border_radius=30)
             draw_text(
                 "GAME OVER :(" if game_outcome == -1 else "DIVOU!",
-                large_font, "grey0", 310, 220
+                large_font, "grey0", 400, 300
             )
             if restart_button.draw(screen):
                 initialize_game()
@@ -402,9 +413,8 @@ def game_loop(screen, username):
 
 
 def main():
-    pg.init()
-    screen = init_game()
-    clock = pg.time.Clock()
+    screen = init_game()  # Inicializa a tela do jogo
+    clock = pg.time.Clock()  # Configura o relógio para controlar a taxa de quadros
 
     # Variáveis de controle de estado
     username = None
@@ -417,31 +427,27 @@ def main():
 
     # Tela de login
     login_screen = TelaDeLogin(screen, login_callback, pg.font.Font(None, 40))
+    
+    # Enquanto o nome de usuário não for definido, exibe a tela de login
     while username is None:
-        login_screen.handle_events()
-        login_screen.draw()
-        clock.tick(60)  # Limita para 60 quadros por segundo
+        login_screen.handle_events()  # Espera o usuário interagir com a tela de login
+        login_screen.draw()  # Desenha a tela de login
+        clock.tick(60)  # Limita a 60 quadros por segundo
 
-    # Tela de menu principal
+    # Depois que o login for bem-sucedido, vai para o menu principal
     menu_screen = main_menu(screen, game_loop)
+    
+    # Loop do menu principal
     while True:
-        menu_screen.handle_events()
-        menu_screen.draw()
-        clock.tick(60)
+        menu_screen.handle_events()  # Verifica os eventos no menu
+        menu_screen.draw()  # Desenha o menu
+        clock.tick(60)  # Limita a 60 quadros por segundo
 
         # Se o usuário clicar no botão "Jogar"
         if not menu_screen.running:
-            game_loop(screen, username)  # Inicia o jogo
+            game_loop(screen, username)  # Inicia o jogo e sai do menu
 
-        # Se o usuário quiser ver o ranking
-        if pg.mouse.get_pressed()[0]:  # Detecta clique esquerdo
-            ranking_screen = RankingScreen(screen)
-            while True:
-                if ranking_screen.run():
-                    break  # Sai do ranking e volta para o menu
 
-        # Outra lógica do menu pode ser adicionada aqui para alternar entre telas.
-    pg.quit()    
 
 if __name__ == "__main__":
     main()
