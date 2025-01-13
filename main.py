@@ -37,6 +37,7 @@ placing_turrets = False
 select_turret = None
 selected_turret = None
 enemy_type = "weak"
+show_begin_button= True
 
 
 
@@ -238,7 +239,7 @@ def init_game():
 
 # Loop do jogo
 def game_loop(screen, username):
-    global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused
+    global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
 
     run = True
     while run:
@@ -266,8 +267,10 @@ def game_loop(screen, username):
 
             # Spawn de inimigos
             if level_started == False:
+                show_begin_button = True
                 if begin_button.draw(screen):
                     level_started = True
+                    show_begin_button = False
             else:
                 #acelerar os inimigos
                 if fast_foward_button.active:
@@ -301,7 +304,7 @@ def game_loop(screen, username):
         # Exibir informações
         display_data()
 
-        if not game_over:
+        if not game_over and show_begin_button == True:
             # Botão de início do nível
             if begin_button.draw(screen):
                 level_started = True
