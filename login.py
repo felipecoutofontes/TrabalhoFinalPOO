@@ -1,168 +1,165 @@
-import tkinter as tk
-from tkinter import messagebox
+import pygame as pg
+import sys
+import constants as c
+from telas import Screen
 import sqlite3
 
-class Usuario:
-    def __init__(self):
-        self.__usuario_logado = None
+# Função para desenhar texto
+def draw_text(text, font, color, surface, x, y):
+    text_obj = font.render(text, True, color)
+    text_rect = text_obj.get_rect(center=(x, y))
+    surface.blit(text_obj, text_rect)
 
-    def set_usuario_logado(self, usuario):
-        self.__usuario_logado = usuario
+# Função para ajustar dinamicamente o tamanho do texto ao espaço disponível
+def get_scaled_font(text, font, max_width):
+    text_obj = font.render(text, True, (0, 0, 0))
+    while text_obj.get_width() > max_width:
+        font = pg.font.Font(font.get_name(), font.size - 1)
+        text_obj = font.render(text, True, (0, 0, 0))
+    return font
 
-    def get_usuario_logado(self):
-        return self.__usuario_logado
+# Função para desenhar botões
+def create_button(text, x, y, width, height, color, font, surface, action=None):
+    rect = pg.Rect(x, y, width, height)
+    pg.draw.rect(surface, color, rect, border_radius=10)
+    draw_text(text, font, (255, 255, 255), surface, x + width // 2, y + height // 2)
+    return rect
 
-    def verificar_login(self, entry_usuario, entry_senha):
-        usuario = entry_usuario.get()
-        senha = entry_senha.get()
+# Função para conectar ao banco de dados
+def connect_db():
+    conn = sqlite3.connect("game_data.db")
+    return conn
 
-        if not usuario or not senha:
-            messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
-            return
+# Função para autenticar o usuário
+def authenticate_user(username, password):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+    user = cursor.fetchone()
+    conn.close()
+    return user
 
-        dados = self.ler_dados_arquivo()
-
-        for u, s in dados:
-            if u == usuario and self.__verificar_senha(s, senha):  # Senha privada
-                self.set_usuario_logado(usuario)
-                messagebox.showinfo("Login bem-sucedido", f"Bem-vindo, {usuario}!")
-                return
-
-        messagebox.showerror("Erro", "Usuário ou senha incorretos.")
-
-    def registrar_usuario(self, entry_usuario, entry_senha):
-        usuario = entry_usuario.get()
-        senha = entry_senha.get()
-
-        if not usuario or not senha:
-            messagebox.showerror("Erro", "Por favor, insira ambos os campos: Usuário e Senha.")
-            return
-
-        dados = self.ler_dados_arquivo()
-
-        for u, s in dados:
-            if u == usuario:
-                messagebox.showerror("Erro", "Usuário já existe.")
-                return
-
-        try:
-            with open('banco_dados.txt', 'a') as arquivo:
-                arquivo.write(f"{usuario},{self.__criptografar_senha(senha)}\n")  # Senha criptografada
-            messagebox.showinfo("Cadastro bem-sucedido", "Usuário registrado com sucesso!")
-        except IOError as e:
-            messagebox.showerror("Erro", f"Erro ao registrar o usuário: {e}")
-
-    def __verificar_senha(self, senha_armazenada, senha_digitada):
-        # Compara a senha invertida com a senha digitada invertida
-        return senha_armazenada == self.__criptografar_senha(senha_digitada)
-
-    def __criptografar_senha(self, senha):
-        # Simples criptografia (inversão da senha como exemplo)
-        return senha[::-1]  # Inverte a senha como exemplo de criptografia
-
-    def ler_dados_arquivo(self):
-        try:
-            with open('banco_dados.txt', 'r') as arquivo:
-                dados = arquivo.readlines()
-            return [linha.strip().split(',') for linha in dados]
-        except FileNotFoundError:
-            with open('banco_dados.txt', 'w'):
-                pass
-            return []
-
-class Ranking:
-    @staticmethod
-    def criar_banco():
-        conn = sqlite3.connect('ranking.db')
-        c = conn.cursor()
-        c.execute(''' 
-            CREATE TABLE IF NOT EXISTS ranking (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario TEXT NOT NULL,
-                pontos INTEGER NOT NULL
-            )
-        ''')
+# Função para criar um novo usuário
+def create_user(username, password):
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
         conn.commit()
+    except sqlite3.IntegrityError:
+        print("Erro: Nome de usuário já existe.")
+    finally:
         conn.close()
 
-    @staticmethod
-    def inserir_ranking(usuario, pontos):
-        conn = sqlite3.connect('ranking.db')
-        c = conn.cursor()
-        c.execute('''
-            INSERT INTO ranking (usuario, pontos) VALUES (?, ?)
-        ''', (usuario, pontos))
-        conn.commit()
-        conn.close()
+class TelaDeLogin(Screen):
+    def __init__(self, screen, login_callback, text_font):
+        super().__init__(screen)
+        self.login_callback = login_callback
+        self.text_font = text_font
 
-    @staticmethod
-    def exibir_ranking():
-        conn = sqlite3.connect('ranking.db')
-        c = conn.cursor()
-        c.execute('''
-            SELECT usuario, pontos FROM ranking ORDER BY pontos DESC LIMIT 10
-        ''')
-        ranking = c.fetchall()
-        conn.close()
+        # Configurações de cores
+        self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
+        self.BLUE = (0, 0, 255)
 
-        print("Ranking Top 10:")
-        for i, (usuario, pontos) in enumerate(ranking, 1):
-            print(f"{i}. {usuario} - {pontos} pontos")
+        # Tamanho dos campos de entrada e botão
+        self.input_width = 300
+        self.input_height = 40
+        self.button_width = 200
+        self.button_height = 50
 
+        # Posições
+        self.input_x = (c.LARGURA_TOTAL - self.input_width) // 2
+        self.input_y = c.SCREEN_HEIGHT // 3
+        self.button_x = (c.LARGURA_TOTAL - self.button_width) // 2
+        self.button_y = self.input_y + 2 * self.input_height + 20
 
-class App:
-    def __init__(self):
-        self.usuario = Usuario()
-        self.root = tk.Tk()
-        self.root.title("Página de Login")
-        self.entry_usuario = None
-        self.entry_senha = None
-        self.entry_pontuacao = None
-        self.criar_tela_login()
+        # Inicializa os campos de texto
+        self.username = ""
+        self.password = ""
+        self.active_input = None  # Nenhum campo ativo por padrão
+        self.message = ""  # Mensagem de erro/sucesso
 
-    def criar_tela_login(self):
-        tk.Label(self.root, text="Usuário:").grid(row=0, column=0, padx=10, pady=10)
-        self.entry_usuario = tk.Entry(self.root)
-        self.entry_usuario.grid(row=0, column=1, padx=10, pady=10)
+    def handle_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
 
-        tk.Label(self.root, text="Senha:").grid(row=1, column=0, padx=10, pady=10)
-        self.entry_senha = tk.Entry(self.root, show="*")
-        self.entry_senha.grid(row=1, column=1, padx=10, pady=10)
+            # Lida com a digitação de texto
+            if event.type == pg.KEYDOWN:
+                if self.active_input == "username":
+                    if event.key == pg.K_BACKSPACE:
+                        self.username = self.username[:-1]
+                    else:
+                        self.username += event.unicode
+                elif self.active_input == "password":
+                    if event.key == pg.K_BACKSPACE:
+                        self.password = self.password[:-1]
+                    else:
+                        self.password += event.unicode
 
-        botao_login = tk.Button(self.root, text="Login", command=self.verificar_login)
-        botao_login.grid(row=2, column=0, columnspan=2, pady=10)
+            # Lida com o clique nos campos de entrada e botão
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                # Verifica se clicou nos campos de texto
+                username_rect = pg.Rect(self.input_x, self.input_y, self.input_width, self.input_height)
+                password_rect = pg.Rect(self.input_x, self.input_y + self.input_height + 10, self.input_width, self.input_height)
+                login_button_rect = pg.Rect(self.button_x, self.button_y, self.button_width, self.button_height)
+                create_account_button_rect = pg.Rect(self.button_x, self.button_y + 70, self.button_width, self.button_height)
 
-        botao_registrar = tk.Button(self.root, text="Registrar", command=self.registrar_usuario)
-        botao_registrar.grid(row=3, column=0, columnspan=2, pady=10)
+                if username_rect.collidepoint(event.pos):
+                    self.active_input = "username"
+                elif password_rect.collidepoint(event.pos):
+                    self.active_input = "password"
+                elif login_button_rect.collidepoint(event.pos):
+                    # Verificar login
+                    user = authenticate_user(self.username, self.password)
+                    if user:
+                        self.message = "Login bem-sucedido!"
+                        self.login_callback(self.username)  # Chama o callback com o nome de usuário
+                    else:
+                        self.message = "Erro: Usuário ou senha incorretos."
+                elif create_account_button_rect.collidepoint(event.pos):
+                    # Criar novo usuário
+                    create_user(self.username, self.password)
+                    self.message = "Conta criada com sucesso!"
 
-        tk.Label(self.root, text="Pontuação:").grid(row=4, column=0, padx=10, pady=10)
-        self.entry_pontuacao = tk.Entry(self.root)
-        self.entry_pontuacao.grid(row=4, column=1, padx=10, pady=10)
+                # Caso contrário, desativa qualquer campo ativo
+                if not username_rect.collidepoint(event.pos) and not password_rect.collidepoint(event.pos):
+                    self.active_input = None
 
-        botao_pontuacao = tk.Button(self.root, text="Registrar Pontuação", command=self.registrar_pontuacao)
-        botao_pontuacao.grid(row=5, column=0, columnspan=2, pady=10)
+    def update(self):
+        pass
 
-        self.root.mainloop()
+    def draw(self):
+        # Preenche o fundo da tela
+        self.screen.fill(self.WHITE)
+        pg.draw.rect(self.screen, "midnightblue", (0, 0, c.LARGURA_TOTAL, c.SCREEN_HEIGHT))
 
-    def verificar_login(self):
-        self.usuario.verificar_login(self.entry_usuario, self.entry_senha)
+        # Desenha o título
+        draw_text("Tela de Login", self.text_font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 4)
 
-    def registrar_usuario(self):
-        self.usuario.registrar_usuario(self.entry_usuario, self.entry_senha)
+        # Desenha os campos de texto
+        username_rect = pg.Rect(self.input_x, self.input_y, self.input_width, self.input_height)
+        password_rect = pg.Rect(self.input_x, self.input_y + self.input_height + 10, self.input_width, self.input_height)
 
-    def registrar_pontuacao(self):
-        usuario_logado = self.usuario.get_usuario_logado()
-        if usuario_logado:
-            try:
-                pontos = int(self.entry_pontuacao.get())
-                Ranking.inserir_ranking(usuario_logado, pontos)
-                messagebox.showinfo("Pontuação registrada", f"{usuario_logado}, sua pontuação foi registrada!")
-                Ranking.exibir_ranking()
-            except ValueError:
-                messagebox.showerror("Erro", "Por favor, insira uma pontuação válida.")
-        else:
-            messagebox.showerror("Erro", "Você precisa estar logado para registrar a pontuação.")
+        pg.draw.rect(self.screen, self.BLUE, username_rect, 2)
+        pg.draw.rect(self.screen, self.BLUE, password_rect, 2)
 
-if __name__ == "__main__":
-    Ranking.criar_banco()
-    app = App()
+        # Desenha o texto dentro dos campos
+        draw_text(self.username, self.text_font, self.BLACK, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height // 2)
+
+        # Exibe a senha como asteriscos
+        password_display = '*' * len(self.password)
+        draw_text(password_display, self.text_font, self.BLACK, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height + self.input_height // 2 + 10)
+
+        # Desenha o botão de login
+        create_button("Login", self.button_x, self.button_y, self.button_width, self.button_height, self.BLUE, self.text_font, self.screen)
+
+        # Desenha o botão de criar conta
+        create_button("Criar Conta", self.button_x, self.button_y + 70, self.button_width, self.button_height, self.BLUE, self.text_font, self.screen)
+
+        # Exibe a mensagem de erro ou sucesso
+        draw_text(self.message, self.text_font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, self.button_y + 150)
+
+        pg.display.flip()
