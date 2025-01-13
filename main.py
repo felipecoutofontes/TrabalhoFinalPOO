@@ -298,7 +298,7 @@ def game_loop(screen, username):
                     world.process_enemies()
 
                     # Salvar progresso quando o nível é completado
-                    save_progress(username, world.level, world.pontuacao)
+                    save_progress(username, world.level, world.pontuacao, world.health, world.money)
 
                     # Salvar a pontuação no banco de dados após o nível
                     save_score(username, world.pontuacao)
