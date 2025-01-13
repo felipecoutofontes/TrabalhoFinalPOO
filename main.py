@@ -3,7 +3,7 @@ import json
 import constants as c
 from enemy import Enemy
 from world import World
-from turret import Turret
+from turret import TurretBasica, TurretSlow, TurretSniper, TurretTop
 from button import Button
 from menu import main_menu
 from pause_screen import tela_de_pause
@@ -33,6 +33,7 @@ last_enemy_spawn = pg.time.get_ticks()
 placing_turrets = False
 select_turret = None
 selected_turret = None
+enemy_type = "weak"
 
 
 
@@ -51,11 +52,20 @@ def load_and_scale_image2(path, size=(c.SCREEN_WIDTH, c.SCREEN_HEIGHT)):
 
 # Carregar imagens
 map_image = load_and_scale_image2('coisas/images/fases/level.png')
-turret_spritesheets = []
-for x in range(1, c.TURRET_LEVELS + 1):
-    turret_sheet = pg.image.load(f'coisas/images/turrets/turret_{x}.png').convert_alpha()
-    turret_spritesheets.append(turret_sheet)
-cursor_turret = pg.image.load('coisas/images/turrets/cursor_turret.png').convert_alpha()
+
+#imagens turrets
+cursor_turrets= {
+    'basic': pg.image.load('coisas/images/turrets/cursor_turret1.png').convert_alpha(),
+    'slow':pg.image.load('coisas/images/turrets/cursor_turret2.png').convert_alpha(),
+    'sniper':pg.image.load('coisas/images/turrets/cursor_turret3.png').convert_alpha(),
+    'top':pg.image.load('coisas/images/turrets/cursor_turret4.png').convert_alpha()
+}
+turret_images = {
+    'basic': pg.image.load('coisas/images/turrets/turret_1.png').convert_alpha(),
+    'slow': pg.image.load('coisas/images/turrets/turret_2.png').convert_alpha(),
+    'sniper' : pg.image.load('coisas/images/turrets/turret_3.png').convert_alpha(),
+    'top': pg.image.load('coisas/images/turrets/turret_4.png').convert_alpha()
+}
 
 #imagens enemies
 enemy_images = {
@@ -66,9 +76,11 @@ enemy_images = {
 }
 
 #botoes
-buy_turret_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
+buy_turretbasica_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
+buy_turretslow_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
+buy_turretsniper_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
+buy_turrettop_image = pg.image.load('coisas/images/botoes/buy_turret.png').convert_alpha()
 cancel_image = pg.image.load('coisas/images/botoes/cancel.png').convert_alpha()
-upgrade_turret_image = pg.image.load('coisas/images/botoes/upgrade_turret.png').convert_alpha()
 begin_image = pg.image.load('coisas/images/botoes/begin.png').convert_alpha()
 restart_image = pg.image.load('coisas/images/botoes/restart.png').convert_alpha()
 fast_foward_image = pg.image.load('coisas/images/botoes/fast_foward.png').convert_alpha()
@@ -91,7 +103,7 @@ with open('levels/level.tmj') as file:
 text_font = pg.font.SysFont("Consolas", 24, bold = True)
 large_font = pg.font.SysFont("Consolas", 36)
 
-#função pra saida de txto na tela
+#função pra saida de texto na tela
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
@@ -99,8 +111,6 @@ def draw_text(text, font, text_col, x, y):
 def display_data():
     #desenha painel
     pg.draw.rect(screen, "midnightblue", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, c.SCREEN_HEIGHT ))
-    #pg.draw.rect(screen, "white", (c.SCREEN_WIDTH, 0, c.SIDE_PANEL, 400 ), 4)
-    #screen.blit(logo_image, (c.SCREEN_WIDTH, 400))
     #display informações
     pg.draw.rect(screen, "steelblue4", (c.SCREEN_WIDTH + 70, 16, 170, 40 ), border_radius = 30)
     draw_text("NÍVEL: " + str(world.level), text_font, "grey100", c.SCREEN_WIDTH + 100, 22) 
@@ -108,10 +118,9 @@ def display_data():
     draw_text(str(world.health), text_font, "grey100", c.SCREEN_WIDTH + 155, 65) 
     screen.blit(coin_image, (c.SCREEN_WIDTH + 115, 90))
     draw_text(str(world.money), text_font, "grey100", c.SCREEN_WIDTH + 155, 95 ) 
-    #draw_text("Para fazer upgrades, selecione a torre que deseja alterar.", text_font, "grey100", c.SCREEN_WIDTH + 20, 600)
 
 # Função para criar uma torre
-def create_turret(mouse_pos):
+def create_turret(mouse_pos, turret_type):
     mouse_tile_x = mouse_pos[0] // c.TILE_SIZE
     mouse_tile_y = mouse_pos[1] // c.TILE_SIZE
     mouse_tile_num = (mouse_tile_y * c.COLS) + mouse_tile_x
@@ -122,10 +131,22 @@ def create_turret(mouse_pos):
             if (mouse_tile_x, mouse_tile_y) == (turret.tile_x, turret.tile_y):
                 space_is_free = False
         if space_is_free:
-            new_turret = Turret(turret_spritesheets, mouse_tile_x, mouse_tile_y, shot_fx)
-            turret_group.add(new_turret)
-            #SUBTRAIR CUSTO DE TURRET
-            world.money -= c.BUY_COST
+            turret_classes = {
+                'basic': TurretBasica,
+                'sniper': TurretSniper,
+                'slow': TurretSlow,
+                'top': TurretTop
+            }
+            turret_costs = {
+                'basic': c.BUY_BASIC,
+                'sniper': c.BUY_SNIPER,
+                'slow': c.BUY_SLOW,
+                'top': c.BUY_TOP
+            }
+            if world.money >= turret_costs[turret_type]:
+                new_turret = turret_classes[turret_type](turret_images[turret_type], mouse_tile_x, mouse_tile_y)
+                turret_group.add(new_turret)
+                world.money -= turret_costs[turret_type]
 
 
 def select_turret(mouse_pos):
@@ -149,9 +170,11 @@ enemy_group = pg.sprite.Group()
 turret_group = pg.sprite.Group()
 
 #cria botao
-turret_button = Button(c.SCREEN_WIDTH + 30, 150, buy_turret_image, True)
+turretbasica_button = Button(c.SCREEN_WIDTH + 30, 150, buy_turretbasica_image, True)
+turretsniper_button = Button(c.SCREEN_WIDTH + 30, 190, buy_turretsniper_image, True)
+turretslow_button = Button(c.SCREEN_WIDTH + 30, 230, buy_turretslow_image, True)
+turrettop_button = Button(c.SCREEN_WIDTH + 30, 270, buy_turrettop_image, True)
 cancel_button = Button(c.SCREEN_WIDTH + 60, 150, cancel_image, True)
-upgrade_button = Button(c.SCREEN_WIDTH + 5, 180, upgrade_turret_image, True)
 begin_button = Button(c.SCREEN_WIDTH + 70, 300, begin_image, True)
 restart_button = Button(310, 300, restart_image, True)
 fast_foward_button = Button(c.SCREEN_WIDTH + 60, 450, fast_foward_image, single_click=True) # se for true o botao é só de um clique mas o false vc segura
@@ -188,14 +211,11 @@ def initialize_game():
 
 # Loop do jogo
 def game_loop():
-    global placing_turrets, selected_turret, last_enemy_spawn, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
+    global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
 
-    
     run = True
     while run:
         clock.tick(c.FPS)
-
- 
         
         # Verificar se o jogo acabou
         if not game_over:
@@ -205,11 +225,12 @@ def game_loop():
             elif world.level > c.TOTAL_LEVELS:
                 game_over = True
                 game_outcome = 1  # ganhou
+                world.pontuacao = world.health + world.money
 
             # Atualizações durante o jogo
             if not paused:
                 # Atualizar inimigos e torres
-                enemy_group.update(world)
+                enemy_group.update(world, enemy_type)
                 turret_group.update(enemy_group, world)
                 
             # Highlight da torre selecionada
@@ -263,35 +284,47 @@ def game_loop():
         if fast_foward_button.draw(screen):
             world.game_speed = 3
         
-
         # Botão de pausa
         if not game_over and pause_button.draw(screen):
             paused = not paused
 
         # Lógica de posicionamento de torres
         if not placing_turrets:
-            draw_text(str(c.BUY_COST), text_font, "grey100", c.SCREEN_WIDTH + 205, 165)
-            screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 160))
-            if turret_button.draw(screen):
-                placing_turrets = True
-        else:
-            cursor_rect = cursor_turret.get_rect()
-            cursor_pos = pg.mouse.get_pos()
-            cursor_rect.center = cursor_pos
-            if cursor_pos[0] <= c.SCREEN_WIDTH:
-                screen.blit(cursor_turret, cursor_rect)
-            if cancel_button.draw(screen):
-                placing_turrets = False
+                draw_text(f"{c.BUY_BASIC}", text_font, "grey100", c.SCREEN_WIDTH + 205, 165)
+                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 160))
+                if turretbasica_button.draw(screen):
+                    placing_turrets = True
+                    selected_turret_type = 'basic'
 
-        # Botão de upgrade da torre selecionada
-        if selected_turret:
-            if selected_turret.upgrade_level < c.TURRET_LEVELS:
-                draw_text(str(c.UPGRADE_COST), text_font, "grey100", c.SCREEN_WIDTH + 217, 195)
-                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 190))
-                if upgrade_button.draw(screen):
-                    if world.money >= c.UPGRADE_COST:
-                        selected_turret.upgrade()
-                        world.money -= c.UPGRADE_COST
+                draw_text(f"{c.BUY_SNIPER}", text_font, "grey100", c.SCREEN_WIDTH + 205, 265)
+                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 260))
+                if turretsniper_button.draw(screen):
+                    placing_turrets = True
+                    selected_turret_type = 'sniper'
+
+                draw_text(f"{c.BUY_SLOW}", text_font, "grey100", c.SCREEN_WIDTH + 205, 365)
+                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 360))
+                if turretslow_button.draw(screen):
+                    placing_turrets = True
+                    selected_turret_type = 'slow'
+
+                draw_text(f"{c.BUY_TOP}", text_font, "grey100", c.SCREEN_WIDTH + 205, 465)
+                screen.blit(coin_image, (c.SCREEN_WIDTH + 250, 460))
+                if turrettop_button.draw(screen):
+                    placing_turrets = True
+                    selected_turret_type = 'top'
+
+        if placing_turrets:
+                if selected_turret_type and selected_turret_type in cursor_turrets:
+                    #desenha o cursor da torre selecionada
+                    cursor_rect = cursor_turrets[selected_turret_type].get_rect()
+                    cursor_pos = pg.mouse.get_pos()
+                    cursor_rect.center = cursor_pos
+                    if cursor_pos[0] <= c.SCREEN_WIDTH:
+                        screen.blit(cursor_turrets[selected_turret_type], cursor_rect)
+                    if cancel_button.draw(screen):
+                        placing_turrets = False
+                        selected_turret_type = None
 
         # Tela de pausa
         if paused and not game_over:
@@ -318,9 +351,13 @@ def game_loop():
                 mouse_pos = pg.mouse.get_pos()
                 if not paused and not game_over:
                     if mouse_pos[0] < c.SCREEN_WIDTH and mouse_pos[1] < c.SCREEN_HEIGHT:
+                    #limpar seleção de turret
+                        selected_turret = None
                         clear_selection()
-                        if placing_turrets and world.money >= c.BUY_COST:
-                            create_turret(mouse_pos)
+                        if placing_turrets and selected_turret_type:
+                            create_turret(mouse_pos, selected_turret_type)
+                            placing_turrets = False
+                            selected_turret_type = None
                         else:
                             selected_turret = select_turret(mouse_pos)
 

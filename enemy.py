@@ -13,16 +13,18 @@ class Enemy(pg.sprite.Sprite):
     self.target_waypoint = 1
     self.health = ENEMY_DATA.get(enemy_type)["health"]
     self.speed = ENEMY_DATA.get(enemy_type)["speed"]
+    self.damage = ENEMY_DATA.get(enemy_type)["damage"]
+    self.original_speed = self.speed
     self.angle = 0
     self.original_image = images.get(enemy_type)
     self.image = pg.transform.rotate(self.original_image, self.angle)
     self.rect = self.image.get_rect()
     self.rect.center = self.pos
 
-  def update(self, world):
+  def update(self, world, enemy_type):
     self.move(world)
     self.rotate()
-    self.check_alive(world)
+    self.check_alive(world, enemy_type)
 
   def move(self, world):
     #define waypoint alvo
@@ -32,7 +34,7 @@ class Enemy(pg.sprite.Sprite):
     else:
       #enemy chegou no fim do caminho
       self.kill()
-      world.health -=1
+      world.health -= self.damage
       world.missed_enemies += 1
 
     #calcula distancia ate o alvo
@@ -57,8 +59,8 @@ class Enemy(pg.sprite.Sprite):
     self.rect = self.image.get_rect()
     self.rect.center = self.pos
   
-  def check_alive(self, world):
+  def check_alive(self, world, enemy_type):
     if self.health <= 0:
       world.killed_enemies += 1
-      world.money += c.KILL_REWARD
+      world.money += ENEMY_DATA.get(enemy_type)["kill_reward"]
       self.kill()

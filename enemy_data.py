@@ -1,7 +1,7 @@
 ENEMY_SPAWN_DATA = [
   {
     #1
-    "weak": 5,
+    "weak": 10,
     "medium": 0,
     "strong": 0,
     "boss": 0
@@ -109,18 +109,26 @@ ENEMY_SPAWN_DATA = [
 ENEMY_DATA = {
     "weak": {
     "health": 10,
-    "speed": 2
+    "speed": 2,
+    "kill_reward" :2,
+    "damage" : 100
   },
     "medium": {
     "health": 15,
-    "speed": 3
+    "speed": 3,
+    "kill_reward" :10,
+    "damage" : 5
   },
     "strong": {
     "health": 20,
-    "speed": 4
+    "speed": 4,
+    "kill_reward" :25,
+    "damage" : 10
   },
     "boss": {
     "health": 30,
-    "speed": 6
+    "speed": 6,
+    "kill_reward" :60,
+    "damage" : 25
   }
 }
