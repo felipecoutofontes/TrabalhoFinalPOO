@@ -47,4 +47,3 @@ class main_menu(Screen):
         pg.draw.rect(self.screen, self.BLUE, self.button_rect)
         draw_text(self.button_text, self.button_font, self.WHITE, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 2 + 25)
         pg.display.flip()
-
