@@ -271,7 +271,7 @@ def game_loop(screen, username):
             else:
                 #acelerar os inimigos
                 if fast_foward_button.active:
-                    world.game_speed = 3
+                    world.game_speed = 4
                 else:
                     world.game_speed = 1    
                 if pg.time.get_ticks() - last_enemy_spawn > c.SPAWN_COOLDOWN:
@@ -309,7 +309,7 @@ def game_loop(screen, username):
           
         # Botão de fast forward
         if fast_foward_button.draw(screen):
-            world.game_speed = 3
+            world.game_speed = 4
         
         # Botão de pausa
         if not game_over and pause_button.draw(screen):

@@ -111,7 +111,7 @@ ENEMY_DATA = {
     "health": 10,
     "speed": 2,
     "kill_reward" :2,
-    "damage" : 100
+    "damage" : 2
   },
     "medium": {
     "health": 15,

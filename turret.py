@@ -109,7 +109,7 @@ class TurretBasica(Turret, pg.sprite.Sprite):
 
 class TurretSniper(Turret, pg.sprite.Sprite):
     def __init__(self, sprite_sheet, tile_x, tile_y):
-        super().__init__(sprite_sheet, tile_x, tile_y, range=200, cooldown=2000, damage=10)
+        super().__init__(sprite_sheet, tile_x, tile_y, range=250, cooldown=2000, damage=12)
 
     def update(self, enemy_group, world):
         if self.target:
