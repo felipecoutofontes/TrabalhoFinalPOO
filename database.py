@@ -9,27 +9,30 @@ def create_tables():
     conn = connect_db()
     cursor = conn.cursor()
 
-    # Tabela de usuários
+    # Criação das tabelas, caso não existam
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT UNIQUE,
                         password TEXT)''')
 
-    # Tabela de pontuações
     cursor.execute('''CREATE TABLE IF NOT EXISTS scores (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username TEXT,
                         score INTEGER)''')
 
-    # Tabela de progresso (nível e score)
+    # Criar a tabela progress, mas verificar se as colunas health e coin já existem
     cursor.execute('''CREATE TABLE IF NOT EXISTS progress (
-                        username TEXT UNIQUE,
-                        level INTEGER,
-                        score INTEGER,
-                        FOREIGN KEY (username) REFERENCES users(username))''')
+                    username TEXT UNIQUE,
+                    level INTEGER,
+                    score INTEGER,
+                    health INTEGER,
+                    coin INTEGER,
+                    FOREIGN KEY (username) REFERENCES users(username))''')
 
     conn.commit()
     conn.close()
+
+
 
 def create_user(username, password):
     # Criar um novo usuário no banco de dados.
@@ -69,21 +72,21 @@ def get_rankings():
     conn.close()
     return rankings
 
-def save_progress(username, level, score):
+def save_progress(username, level, score, health, coin):
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute('''INSERT OR REPLACE INTO progress (username, level, score)
-                      VALUES (?, ?, ?)''', (username, level, score))
+    cursor.execute('''INSERT OR REPLACE INTO progress (username, level, score, health, coin)
+                      VALUES (?, ?, ?, ?, ?)''', (username, level, score, health, coin))
     conn.commit()
     conn.close()
 
 def get_progress(username):
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT level, score FROM progress WHERE username=?", (username,))
+    cursor.execute("SELECT level, score, health, coin FROM progress WHERE username=?", (username,))
     progress = cursor.fetchone()
     conn.close()
-    return progress if progress else (1, 0)  # Se não houver progresso, começa do nível 1
+    return progress if progress else (1, 0, 100, 250)  # Se não houver progresso, começa do nível 1, saúde 100 e moedas 0
 
 # Inicializar o banco de dados
 create_tables()
