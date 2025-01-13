@@ -241,7 +241,8 @@ def game_loop(screen, username):
     level_completed = False
 
     # Carregar progresso
-    level, score = get_progress(username)
+    level, score, health, coin = get_progress(username)
+
     world.level = level  # Definir o nível atual com o valor carregado
     world.pontuacao = score  # Definir a pontuação
 
