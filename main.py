@@ -1,12 +1,15 @@
 import pygame as pg
 import json
 import constants as c
+import sys
 from enemy import Enemy
 from world import World
 from turret import TurretBasica, TurretSlow, TurretSniper, TurretTop
 from button import Button
 from menu import main_menu
 from pause_screen import tela_de_pause
+from login import TelaDeLogin
+from ranking import RankingScreen
 
 
 # Inicia o pygame
@@ -226,9 +229,15 @@ def initialize_game():
     enemy_group.empty()
     turret_group.empty()
 
+# Função para inicializar o Pygame e criar a tela
+def init_game():
+    pg.init()
+    screen = pg.display.set_mode((c.LARGURA_TOTAL, c.SCREEN_HEIGHT))
+    pg.display.set_caption("Tower Defense")
+    return screen
 
 # Loop do jogo
-def game_loop():
+def game_loop(screen, username):
     global placing_turrets, selected_turret, selected_turret_type, last_enemy_spawn, enemy_type, level_started, game_over, world, game_outcome, fast_forward_active, paused, show_begin_button
 
     run = True
@@ -389,14 +398,45 @@ def game_loop():
 
 
 
-# Inicializar o menu principal e iniciar o jogo
-initialize_game()
-menu = main_menu(screen, game_loop)  # Cria uma instância do menu
-menu.run()  # Executa o menu até o jogador clicar em "Jogar"
+def main():
+    screen = init_game()
+    clock = pg.time.Clock()
 
-# Quando o menu terminar, o jogo será iniciado
-game_loop()  # Inicia o loop principal do jogo
+    # Variáveis de controle de estado
+    username = None
 
-pg.quit()  # Fecha o pygame corretamente ao final
+    # Função de login
+    def login_callback(username_input):
+        nonlocal username
+        username = username_input
+        return "Login bem-sucedido!"
 
+    # Tela de login
+    login_screen = TelaDeLogin(screen, login_callback, pg.font.Font(None, 40))
+    while username is None:
+        login_screen.handle_events()
+        login_screen.draw()
+        clock.tick(60)  # Limita para 60 quadros por segundo
 
+    # Tela de menu principal
+    menu_screen = main_menu(screen, game_loop)
+    while True:
+        menu_screen.handle_events()
+        menu_screen.draw()
+        clock.tick(60)
+
+        # Se o usuário clicar no botão "Jogar"
+        if not menu_screen.running:
+            game_loop(screen, username)  # Inicia o jogo
+
+        # Se o usuário quiser ver o ranking
+        if pg.mouse.get_pressed()[0]:  # Detecta clique esquerdo
+            ranking_screen = RankingScreen(screen)
+            while True:
+                if ranking_screen.run():
+                    break  # Sai do ranking e volta para o menu
+
+        # Outra lógica do menu pode ser adicionada aqui para alternar entre telas.
+
+if __name__ == "__main__":
+    main()
