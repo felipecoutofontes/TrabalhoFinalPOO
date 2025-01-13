@@ -60,7 +60,7 @@ def save_score(username, score):
     cursor.execute("INSERT INTO scores (username, score) VALUES (?, ?)", (username, score))
     conn.commit()
     conn.close()
-
+    
 def get_rankings():
     # Recuperar as pontuações mais altas do banco de dados.
     conn = connect_db()
