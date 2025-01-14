@@ -257,7 +257,7 @@ def game_loop(screen, username):
     # Carregar progresso
     level, score, health, coin = get_progress(username)
     world.level = level  # Definir o nível atual com o valor carregado
-    world.pontuacao = score  # Definir a pontuação
+    world.pontuacao = score  if score is not None else 0 # Definir a pontuação
     world.health = health  # Definir a saúde
     world.money = coin  # Definir as moedas
 
@@ -324,11 +324,15 @@ def game_loop(screen, username):
                     world.reset_level()
                     world.process_enemies()
 
+                     # Atualizar pontuação antes de salvar
+                    world.pontuacao = max(250, world.health + world.money)
+
                     # Salvar progresso quando o nível é completado
                     save_progress(username, world.level, world.pontuacao, world.health, world.money)
 
                     # Salvar a pontuação no banco de dados após o nível
-                    save_score(username, world.pontuacao)
+                    if world.pontuacao is not None and world.pontuacao >= 0:
+                        save_score(username, world.pontuacao)
                     print(f"Pontuação de {username} salva: {world.pontuacao}")
 
                     # Atualize o flag para evitar salvamentos repetidos
