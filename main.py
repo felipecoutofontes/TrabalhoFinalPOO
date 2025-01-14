@@ -8,7 +8,7 @@ from turret import TurretBasica, TurretSlow, TurretSniper, TurretTop
 from button import Button
 from menu import main_menu
 from pause_screen import tela_de_pause
-from login import TelaDeLoginimport pygame as pg
+from login import TelaDeLogin
 import json
 import constants as c
 import sys
