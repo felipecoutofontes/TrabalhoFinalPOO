@@ -137,7 +137,7 @@ class TelaDeLogin(Screen):
         pg.draw.rect(self.screen, "midnightblue", (0, 0, c.LARGURA_TOTAL, c.SCREEN_HEIGHT))
 
         # Desenha o título
-        draw_text("Tela de Login", self.text_font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 4)
+        draw_text("Tela de Login", self.text_font, self.WHITE, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 4)
 
         # Desenha os campos de texto
         username_rect = pg.Rect(self.input_x, self.input_y, self.input_width, self.input_height)
@@ -147,11 +147,11 @@ class TelaDeLogin(Screen):
         pg.draw.rect(self.screen, self.BLUE, password_rect, 2)
 
         # Desenha o texto dentro dos campos
-        draw_text(self.username, self.text_font, self.BLACK, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height // 2)
+        draw_text(self.username, self.text_font, self.WHITE, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height // 2)
 
         # Exibe a senha como asteriscos
         password_display = '*' * len(self.password)
-        draw_text(password_display, self.text_font, self.BLACK, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height + self.input_height // 2 + 10)
+        draw_text(password_display, self.text_font, self.WHITE, self.screen, self.input_x + self.input_width // 2, self.input_y + self.input_height + self.input_height // 2 + 10)
 
         # Desenha o botão de login
         create_button("Login", self.button_x, self.button_y, self.button_width, self.button_height, self.BLUE, self.text_font, self.screen)
@@ -160,6 +160,6 @@ class TelaDeLogin(Screen):
         create_button("Criar Conta", self.button_x, self.button_y + 70, self.button_width, self.button_height, self.BLUE, self.text_font, self.screen)
 
         # Exibe a mensagem de erro ou sucesso
-        draw_text(self.message, self.text_font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, self.button_y + 150)
+        draw_text(self.message, self.text_font, self.WHITE, self.screen, c.LARGURA_TOTAL // 2, self.button_y + 150)
 
         pg.display.flip()
