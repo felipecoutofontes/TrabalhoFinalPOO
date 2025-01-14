@@ -62,7 +62,7 @@ class main_menu(Screen):
 
     def draw(self):
         self.screen.fill(self.WHITE)
-        draw_text("Tower Defense", self.font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 4)
+        draw_text("Space Pirates", self.font, self.BLACK, self.screen, c.LARGURA_TOTAL // 2, c.SCREEN_HEIGHT // 4)
 
         # Desenha o botão "Jogar"
         pg.draw.rect(self.screen, self.BLUE, self.play_button_rect)
