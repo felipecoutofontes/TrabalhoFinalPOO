@@ -9,7 +9,7 @@ class World():
     self.game_speed = 1
     self.health = c.HEALTH
     self.money = c.MONEY
-    self.pontuacao = 0
+    self.pontuacao = self.health + self.money
     self.tile_map = []
     self.waypoints = []
     self.level_data = data
@@ -44,12 +44,14 @@ class World():
         self.enemy_list.append(enemy_type)
     random.shuffle(self.enemy_list)
 
+  def update_score(self):
+        self.pontuacao = self.health + self.money
+
   def check_level_complete(self):
     if (self.killed_enemies + self.missed_enemies) == len(self.enemy_list):
       return True
     
   def reset_level(self):
-    #reset enemy variables
     self.enemy_list = []
     self.spawned_enemies = 0
     self.killed_enemies = 0

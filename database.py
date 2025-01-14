@@ -22,17 +22,15 @@ def create_tables():
 
     # Criar a tabela progress, mas verificar se as colunas health e coin já existem
     cursor.execute('''CREATE TABLE IF NOT EXISTS progress (
-                    username TEXT UNIQUE,
-                    level INTEGER,
-                    score INTEGER,
-                    health INTEGER,
-                    coin INTEGER,
-                    FOREIGN KEY (username) REFERENCES users(username))''')
+                        username TEXT UNIQUE,
+                        level INTEGER,
+                        score INTEGER,
+                        health INTEGER DEFAULT 100,  -- Definindo um valor padrão
+                        coin INTEGER DEFAULT 250,     -- Definindo um valor padrão
+                        FOREIGN KEY (username) REFERENCES users(username))''')
 
     conn.commit()
     conn.close()
-
-
 
 def create_user(username, password):
     # Criar um novo usuário no banco de dados.
@@ -62,7 +60,7 @@ def save_score(username, score):
     cursor.execute("INSERT INTO scores (username, score) VALUES (?, ?)", (username, score))
     conn.commit()
     conn.close()
-
+    
 def get_rankings():
     # Recuperar as pontuações mais altas do banco de dados.
     conn = connect_db()
@@ -86,8 +84,7 @@ def get_progress(username):
     cursor.execute("SELECT level, score, health, coin FROM progress WHERE username=?", (username,))
     progress = cursor.fetchone()
     conn.close()
-    return progress if progress else (1, 0, 100, 250)  # Se não houver progresso, começa do nível 1, saúde 100 e moedas 0
+    return progress if progress else (1, 0, 100, 250)  # Se não houver progresso, começa do nível 1, saúde 100 e moedas 250
 
 # Inicializar o banco de dados
 create_tables()
-
